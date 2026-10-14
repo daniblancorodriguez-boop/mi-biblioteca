@@ -1,0 +1,15 @@
+{
+  "name": "Mi biblioteca",
+  "short_name": "Biblioteca",
+  "description": "Biblioteca personal de lectura y lista de deseos. Datos solo en tu dispositivo.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f1e5",
+  "theme_color": "#f7f1e5",
+  "lang": "es",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
