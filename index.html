@@ -172,13 +172,16 @@ async function searchOL(title,author){
     langs:d.language||[],subjects:(d.subject||[]).slice(0,5)}))}
 const getPref=(k,d)=>{try{return localStorage.getItem(k)||d}catch{return d}};
 const setPref=(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch{}};
-const SRC_OPTS=[['ol+apple','Open Library + Apple Books (recomendado)'],['ol','Solo Open Library'],['apple','Solo Apple Books'],['gb','Solo Google Books'],['all','Todos (incluye Google Books)']];
+const GB_DEFAULT_KEY='AIzaSyCBqoJeyqGbs1r1UiItw6Omb_zSRB5OTRI'; // clave de Books API restringida al sitio web de esta app y solo a Books API
+const gbKey=()=>getPref('gbKey','')||GB_DEFAULT_KEY;
+const srcPref=()=>getPref('searchSrc','all');
+const SRC_OPTS=[['all','Todos: Open Library, Apple Books y Google Books (recomendado)'],['ol+apple','Open Library + Apple Books'],['ol','Solo Open Library'],['apple','Solo Apple Books'],['gb','Solo Google Books']];
 const stripHtml=h=>{try{return new DOMParser().parseFromString(h||'','text/html').body.textContent.trim()}catch{return String(h||'').replace(/<[^>]+>/g,'')}};
 async function gbQuery(q){
-  const key=getPref('gbKey','');
+  const key=gbKey();
   const r=await fetchT('https://www.googleapis.com/books/v1/volumes?maxResults=12&printType=books&orderBy=relevance&q='+encodeURIComponent(q)+(key?'&key='+encodeURIComponent(key):''));
-  if(r.status===429)throw new Error('Google Books ha alcanzado su límite de consultas. Usa otra fuente o añade tu clave gratuita en «Clave de Google»');
-  if(r.status===403||r.status===400)throw new Error(key?'Google Books rechazó tu clave o la consulta':'Google Books ha rechazado la consulta (límite sin clave). Usa otra fuente o añade tu clave gratuita en «Clave de Google»');
+  if(r.status===429)throw new Error('Google Books ha alcanzado su límite de consultas de hoy. Prueba con otra fuente');
+  if(r.status===403||r.status===400)throw new Error('Google Books ha rechazado la clave o la consulta. Prueba con otra fuente o revisa la clave en «Clave de Google»');
   if(!r.ok)throw new Error('Google Books respondió '+r.status);
   return (await r.json()).items||[]}
 async function searchApple(title,author){
@@ -377,7 +380,7 @@ function renderForm(){
    <label for="f-authors">Autor o autores (opcional, separa con comas)</label><input id="f-authors" value="${esc(F.authors)}" placeholder="Para identificar la edición correcta" autocomplete="off">
    <div class="banner" style="margin-top:16px"><b>Completar automáticamente</b> <span class="small muted">(opcional)</span>
     <div class="small muted" style="margin:4px 0 8px">También puedes saltarte esto y rellenar todo a mano.</div>
-    <label for="srcsel" style="margin-top:6px">Buscar en</label><select id="srcsel">${SRC_OPTS.map(o=>`<option value="${o[0]}" ${getPref('searchSrc','ol+apple')===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>
+    <label for="srcsel" style="margin-top:6px">Buscar en</label><select id="srcsel">${SRC_OPTS.map(o=>`<option value="${o[0]}" ${srcPref()===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>
     <div class="row" style="flex-wrap:wrap;margin-top:10px"><button class="btn primary small" data-act="search">🔍 Buscar en Internet</button><button class="btn small ghost" data-act="gbkey">⚙ Clave de Google</button></div></div>
    ${errs}${res}${autoB}
    <h3 style="margin:24px 0 6px">Portada</h3>
@@ -636,7 +639,7 @@ const ACT={
   'rm-chr':t=>{t.closest('.chr-row').remove();scheduleDraft()},
   search:async()=>{collect();const title=F.title.trim(),author=F.authors.trim();
     if(!title){toast('Escribe el título para buscar.');$('#f-title')?.focus();return}
-    const pref=getPref('searchSrc','ol+apple');
+    const pref=srcPref();
     const jobs=[];if(['ol+apple','ol','all'].includes(pref))jobs.push(['Open Library',searchOL(title,author)]);
     if(['ol+apple','apple','all'].includes(pref))jobs.push(['Apple Books',searchApple(title,author)]);
     if(['gb','all'].includes(pref))jobs.push(['Google Books',searchGB(title,author)]);
@@ -649,9 +652,9 @@ const ACT={
       F.errs=[gbMsg&&failed.length===1?gbMsg[1].message+'.':'No se pudo conectar con los servicios de búsqueda. Comprueba tu conexión o prueba con otra fuente; puedes seguir rellenando los datos a mano. Lo que has escrito no se ha perdido.']}
     else failed.forEach(f=>F.errs.push((f[0]==='Google Books'&&f[1]&&f[1].message?f[1].message:f[0]+' no ha respondido')+'. Se muestran los resultados de las otras fuentes.'));
     F.searching=false;F.results=F.errs.length&&!res.length?null:res.filter(r=>r.title);F._raw=F.results;renderForm()},
-  gbkey:async()=>{collect();const r=await dialog('Clave de Google Books',`<p class="muted small" style="margin:0 0 8px">Sin clave, Google Books comparte un límite con todo el mundo y suele fallar. Con tu propia clave gratuita tienes tu cupo personal.</p><p class="muted small" style="margin:0 0 8px">Se crea gratis en <b>console.cloud.google.com</b> (activar «Books API» y crear una clave de API). Se guarda solo en este dispositivo y no se incluye en las copias de seguridad.</p><label for="gk">Clave de API</label><input id="gk" value="${esc(getPref('gbKey',''))}" placeholder="AIza…" autocomplete="off" autocapitalize="off" spellcheck="false">`,
+  gbkey:async()=>{collect();const r=await dialog('Clave de Google Books',`<p class="muted small" style="margin:0 0 8px">La app ya incluye una clave de Google Books. Escribe aquí otra solo si quieres usar una distinta; déjalo vacío para usar la incluida.</p><p class="muted small" style="margin:0 0 8px">Tu clave personal se guarda solo en este dispositivo y no se incluye en las copias de seguridad.</p><label for="gk">Clave de API</label><input id="gk" value="${esc(getPref('gbKey',''))}" placeholder="(vacío = clave incluida)" autocomplete="off" autocapitalize="off" spellcheck="false">`,
     [{label:'Guardar',cls:'primary',get:m=>({k:$('#gk',m).value.trim()})},{label:'Cancelar',val:null}]);
-    if(r){setPref('gbKey',r.k);toast(r.k?'Clave guardada':'Clave eliminada')}},
+    if(r){setPref('gbKey',r.k);toast(r.k?'Clave personal guardada':'Se usará la clave incluida en la app')}},
   'use-res':t=>applyResult(F.results[+t.dataset.i],false),'use-cover':t=>applyResult(F.results[+t.dataset.i],true),
   'confirm-auto':()=>{collect();F.auto.confirmed=true;F.metadataVerified=true;renderForm();toast('Datos confirmados ✓')},
   'reject-auto':async()=>{if(!await ask('¿Rechazar los datos automáticos?','Se vaciarán los campos que rellenó la búsqueda (título y autor se conservan).',[{label:'Rechazar y vaciar',cls:'danger',val:true},{label:'Cancelar',val:false}]))return;
