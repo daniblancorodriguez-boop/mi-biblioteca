@@ -1,6 +1,6 @@
 // Service worker: guarda la app para que funcione sin conexión.
 // Las llamadas a APIs externas (Open Library, Google Books) NO se cachean.
-const CACHE = 'mi-biblioteca-v7';
+const CACHE = 'mi-biblioteca-v8';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {

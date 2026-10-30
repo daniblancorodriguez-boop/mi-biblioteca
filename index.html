@@ -112,6 +112,7 @@ const norm=s=>(s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300
 const pad=n=>String(n).padStart(2,'0');
 const today=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
 const fmtDate=iso=>iso?new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'}):'';
+const fmtDay=d=>{if(!d)return'';const [y,m,dd]=d.split('-').map(Number);return new Date(y,m-1,dd).toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'})};
 const authStr=it=>(it.authors||[]).join(', ');
 const splitList=s=>(s||'').split(/[;,\n]/).map(x=>x.trim()).filter(Boolean);
 const hue=s=>{let h=0;for(const c of s||'')h=(h*31+c.charCodeAt(0))%360;return h};
@@ -133,7 +134,7 @@ const getOne=(s,k)=>rp(db.transaction(s).objectStore(s).get(k));
 function tx(stores,fn){return new Promise((res,rej)=>{const t=db.transaction(stores,'readwrite');let out;t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error||new Error('Transacción cancelada'));try{out=fn(t)}catch(e){t.abort();rej(e)}})}
 
 /* ======================= Estado ======================= */
-const S={books:[],wish:[],quotes:[],q:'',sort:'added-desc',f:{author:'',genre:'',status:'',rating:'',from:'',to:''},
+const S={books:[],wish:[],quotes:[],q:'',sort:'added-desc',f:{author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:''},
   wq:'',wsort:'added-desc',wf:{genre:'',prio:'',from:'',to:''}};
 async function reload(){[S.books,S.wish,S.quotes]=await Promise.all([getAll('books'),getAll('wishlist'),getAll('quotes')])}
 
@@ -257,16 +258,20 @@ function libFiltered(){
     if(f.status&&b.status!==f.status)return false;
     if(f.rating==='none'&&b.rating)return false;
     if(f.rating&&f.rating!=='none'&&b.rating!==+f.rating)return false;
+    const sd=b.startDate||'',ed=b.endDate||'';
+    if(f.sFrom&&(!sd||sd<f.sFrom))return false;if(f.sTo&&(!sd||sd>f.sTo))return false;if(f.eFrom&&(!ed||ed<f.eFrom))return false;if(f.eTo&&(!ed||ed>f.eTo))return false;
     const d=(b.addedAt||'').slice(0,10);if(f.from&&d<f.from)return false;if(f.to&&d>f.to)return false;return true});
   const c=(a,b)=>norm(a).localeCompare(norm(b),'es');
   const s=S.sort;
-  L.sort((a,b)=>s==='title'?c(a.title,b.title):s==='author'?c(authStr(a),authStr(b)):s==='added-asc'?a.addedAt.localeCompare(b.addedAt):s==='rating-desc'?((b.rating||0)-(a.rating||0)):s==='rating-asc'?((a.rating||0)-(b.rating||0)):b.addedAt.localeCompare(a.addedAt));
+  const dk=s.startsWith('end-')?'endDate':s.startsWith('start-')?'startDate':null;
+  if(dk){const dir=s.endsWith('asc')?1:-1;L.sort((a,b)=>{const x=a[dk]||'',y=b[dk]||'';if(!x&&!y)return b.addedAt.localeCompare(a.addedAt);if(!x)return 1;if(!y)return -1;return dir*x.localeCompare(y)})}
+  else L.sort((a,b)=>s==='title'?c(a.title,b.title):s==='author'?c(authStr(a),authStr(b)):s==='added-asc'?a.addedAt.localeCompare(b.addedAt):s==='rating-desc'?((b.rating||0)-(a.rating||0)):s==='rating-asc'?((a.rating||0)-(b.rating||0)):b.addedAt.localeCompare(a.addedAt));
   return L}
-const activeF=f=>Object.values(f).filter(Boolean).length;
+const activeF=f=>{const pairs=[['from','to'],['sFrom','sTo'],['eFrom','eTo']],inPair=new Set(pairs.flat());let n=Object.entries(f).filter(([k,v])=>v&&!inPair.has(k)).length;pairs.forEach(p=>{if(p.some(k=>f[k]))n++});return n}; // un rango de fechas cuenta como un solo filtro
 function renderLib(){
   $('#top').innerHTML=`<div class="row"><h1 class="grow">Mi biblioteca</h1><button class="btn" data-act="backup" aria-label="Copia de seguridad" title="Copia de seguridad">💾</button><button class="plus" data-act="new-book" aria-label="Añadir libro">+</button></div>
   <input id="q" type="search" placeholder="Buscar por título o autor" value="${esc(S.q)}" style="margin-top:8px">
-  <div class="tools"><select id="sort" aria-label="Ordenar"><option value="added-desc">Más recientes</option><option value="added-asc">Más antiguos</option><option value="title">Título A-Z</option><option value="author">Autor A-Z</option><option value="rating-desc">Mejor puntuados</option><option value="rating-asc">Peor puntuados</option></select>
+  <div class="tools"><select id="sort" aria-label="Ordenar"><option value="added-desc">Más recientes</option><option value="added-asc">Más antiguos</option><option value="title">Título A-Z</option><option value="author">Autor A-Z</option><option value="rating-desc">Mejor puntuados</option><option value="rating-asc">Peor puntuados</option><option value="end-desc">Terminados: más recientes</option><option value="end-asc">Terminados: más antiguos</option><option value="start-desc">Empezados: más recientes</option><option value="start-asc">Empezados: más antiguos</option></select>
   <button class="btn" data-act="filters">Filtros${activeF(S.f)?`<span class="badge">${activeF(S.f)}</span>`:''}</button></div>`;
   $('#sort').value=S.sort;
   const age=backupAge();const warn=S.books.length&&(age===null||age>=30)?`<div class="banner"><b>Haz una copia de seguridad</b><div class="small">Tus libros solo están en este dispositivo. ${age===null?'Aún no has hecho ninguna copia.':`Tu última copia tiene ${age} días.`}</div><button class="btn small primary" data-act="backup" style="margin-top:8px">💾 Copia de seguridad</button></div>`:'';
@@ -314,7 +319,7 @@ function renderBook(id){
   $('#top').innerHTML=`<div class="row"><button class="btn ghost" data-act="back">← Biblioteca</button><span class="grow"></span><button class="btn small" data-act="edit-book" data-id="${id}">Editar</button><button class="btn small danger" data-act="del-book" data-id="${id}">Eliminar</button></div>`;
   $('#main').innerHTML=`<div class="detail">
    <div class="hero">${coverHTML(b)}<div><h2 class="serif">${esc(b.title)}</h2>${b.subtitle?`<div class="muted">${esc(b.subtitle)}</div>`:''}<div style="margin-top:4px">${esc(authStr(b))||'<span class="muted">Autor desconocido</span>'}</div>
-     <div style="margin-top:8px"><button class="btn small" data-act="toggle-status" data-id="${id}">${b.status==='leido'?'✓ Leído':'⏳ Pendiente de leer'}</button></div>${b.status==='leido'&&(b.formats||[]).length?`<div class="small" style="margin-top:8px">${(b.formats||[]).map(f=>f==='fisico'?'📕 Físico':'📱 Electrónico').join(' &nbsp;·&nbsp; ')}</div>`:''}<div style="margin-top:8px">${cdlButton(b)}</div></div></div>
+     <div style="margin-top:8px"><button class="btn small" data-act="toggle-status" data-id="${id}">${b.status==='leido'?'✓ Leído':'⏳ Pendiente de leer'}</button></div>${b.status==='leido'&&(b.formats||[]).length?`<div class="small" style="margin-top:8px">${(b.formats||[]).map(f=>f==='fisico'?'📕 Físico':'📱 Electrónico').join(' &nbsp;·&nbsp; ')}</div>`:''}${b.status==='leido'&&(b.startDate||b.endDate)?`<div class="small" style="margin-top:6px">${b.startDate?`📅 Inicio: ${fmtDay(b.startDate)}`:''}${b.startDate&&b.endDate?'<br>':''}${b.endDate?`🏁 Fin: ${fmtDay(b.endDate)}`:''}</div>`:''}<div style="margin-top:8px">${cdlButton(b)}</div></div></div>
    <section><h3>Mi valoración</h3>${stars(b.rating||0,'rate')}<div class="muted small">${b.rating?`${b.rating} de 5 · <button class="btn ghost small" data-act="rate" data-v="0" style="min-height:0;padding:0">quitar valoración</button>`:'Sin valorar'}</div></section>
    <section><h3>Sinopsis y datos ${srcPill(b)}</h3>${b.synopsis?`<p style="white-space:pre-wrap">${esc(b.synopsis)}</p>`:'<p class="muted">Sin sinopsis.</p>'}${dlRows(b)}</section>
    <section><h3>Personajes principales</h3>${(b.characters||[]).length?b.characters.map(c=>`<div class="chr"><b>${esc(c.name)}</b>${c.desc?`<div class="small">${esc(c.desc)}</div>`:'<div class="small muted">Sin descripción</div>'}</div>`).join(''):'<p class="muted">Aún no hay personajes.</p>'}</section>
@@ -338,11 +343,11 @@ function renderWishItem(id){
 
 /* ======================= Formulario de alta / edición ======================= */
 let F=null; // estado del formulario
-const FIELDS=['title','subtitle','authors','genres','pubDate','publisher','isbn','language','synopsis'];
-function blank(kind){return {kind,id:uid(),isNew:true,formats:[],title:'',subtitle:'',authors:'',genres:'',pubDate:'',publisher:'',isbn:'',language:'',synopsis:'',
+const FIELDS=['title','subtitle','authors','genres','pubDate','publisher','isbn','language','synopsis','startDate','endDate'];
+function blank(kind){return {kind,id:uid(),isNew:true,formats:[],startDate:'',endDate:'',title:'',subtitle:'',authors:'',genres:'',pubDate:'',publisher:'',isbn:'',language:'',synopsis:'',
   characters:[],quotes:[],notes:'',rating:0,status:'pendiente',priority:'',personalNote:'',coverBlob:null,coverUrl:'',
   edited:new Set(),auto:null,autoApplied:false,results:null,searching:false,errs:[],metadataSource:'',metadataVerified:false}}
-function fromItem(kind,it){const f=blank(kind);Object.assign(f,{id:it.id,isNew:false,orig:it,formats:[...(it.formats||[])],title:it.title||'',subtitle:it.subtitle||'',authors:authStr(it),genres:(it.genres||[]).join(', '),pubDate:it.pubDate||'',publisher:it.publisher||'',isbn:it.isbn||'',language:it.language||'',synopsis:it.synopsis||'',
+function fromItem(kind,it){const f=blank(kind);Object.assign(f,{id:it.id,isNew:false,orig:it,formats:[...(it.formats||[])],startDate:it.startDate||'',endDate:it.endDate||'',title:it.title||'',subtitle:it.subtitle||'',authors:authStr(it),genres:(it.genres||[]).join(', '),pubDate:it.pubDate||'',publisher:it.publisher||'',isbn:it.isbn||'',language:it.language||'',synopsis:it.synopsis||'',
   characters:(it.characters||[]).map(c=>({...c})),notes:it.notes||'',rating:it.rating||0,status:it.status||'pendiente',priority:it.priority||'',personalNote:it.personalNote||'',coverBlob:it.coverBlob||null,coverUrl:it.coverUrl||'',metadataSource:it.metadataSource||'',metadataVerified:!!it.metadataVerified});
   FIELDS.forEach(k=>f.edited.add(k));return f} // datos ya guardados: una búsqueda nueva no los pisa
 async function openForm(kind,item){
@@ -398,6 +403,7 @@ function renderForm(){
    ${fld('synopsis','Sinopsis',"Sinopsis o resumen",{area:1})}
    ${book?`<h3 style="margin:24px 0 0">Mi lectura</h3>
    <label for="f-status">Estado</label><select id="f-status"><option value="pendiente" ${F.status==='pendiente'?'selected':''}>Pendiente de leer</option><option value="leido" ${F.status==='leido'?'selected':''}>Leído</option></select>
+   ${F.status==='leido'?`<div class="two"><div><label for="f-startDate">Fecha de inicio</label><input type="date" id="f-startDate" value="${esc(F.startDate)}"></div><div><label for="f-endDate">Fecha de finalización</label><input type="date" id="f-endDate" value="${esc(F.endDate)}"></div></div>`:''}
    <label>Valoración personal (opcional)</label>${stars(F.rating,'frate')}<div class="small muted">${F.rating?`${F.rating} de 5`:'Sin valorar'}</div>
    <h3 style="margin:24px 0 0">Personajes principales</h3><div id="chars">${F.characters.map(c=>`<div class="chr chr-row"><input class="cn" placeholder="Nombre" value="${esc(c.name)}"><textarea class="cd" rows="2" placeholder="Descripción breve" style="margin-top:6px;min-height:60px">${esc(c.desc)}</textarea><button class="btn small ghost" data-act="rm-chr" style="color:var(--danger)">Quitar</button></div>`).join('')}</div>
    <button class="btn small" data-act="add-chr" style="margin-top:6px">+ Añadir personaje</button>
@@ -435,12 +441,13 @@ function buildRecord(){
   const now=new Date().toISOString();const base=F.orig||{};
   const r={...base,id:F.id,title:F.title.trim(),subtitle:F.subtitle.trim(),authors:splitList(F.authors),genres:splitList(F.genres),pubDate:F.pubDate.trim(),publisher:F.publisher.trim(),isbn:F.isbn.trim(),language:F.language.trim(),synopsis:F.synopsis.trim(),
     coverBlob:F.coverBlob||null,coverUrl:F.coverBlob?'':(F.coverUrl||''),metadataSource:F.metadataSource||'',metadataVerified:!!(F.auto&&F.auto.confirmed)||(!F.auto&&F.metadataVerified),addedAt:base.addedAt||now,updatedAt:now};
-  if(F.kind==='book'){r.formats=(F.formats||[]).filter(x=>x==='fisico'||x==='electronico');r.characters=F.characters.filter(c=>c.name);r.rating=F.rating||null;r.status=F.status;r.notes=F.notes}
+  if(F.kind==='book'){r.startDate=F.startDate||'';r.endDate=F.endDate||'';r.formats=(F.formats||[]).filter(x=>x==='fisico'||x==='electronico');r.characters=F.characters.filter(c=>c.name);r.rating=F.rating||null;r.status=F.status;r.notes=F.notes}
   else{r.priority=F.priority||'';r.personalNote=F.personalNote.trim()}
   return r}
 async function saveForm(){
   collect();
   if(!F.title.trim()){toast('Escribe al menos el título para guardar.');$('#f-title')?.focus();return}
+  if(F.kind==='book'&&F.status==='leido'&&F.startDate&&F.endDate&&F.endDate<F.startDate){toast('La fecha de finalización no puede ser anterior a la de inicio.',4500);$('#f-endDate')?.focus();return}
   if(F.auto&&!F.auto.confirmed){
     const c=await ask('Datos automáticos sin confirmar','Hay datos de la búsqueda que no has confirmado. Puedes guardarlos marcados como «sin verificar» o volver a revisarlos.',[{label:'Guardar como «sin verificar»',cls:'primary',val:'save'},{label:'Confirmar y guardar',val:'conf'},{label:'Volver a revisar',val:'back'}]);
     if(c==='back')return;if(c==='conf')F.auto.confirmed=true}
@@ -602,8 +609,10 @@ async function filtersDialog(){
   const r=await dialog('Filtros',`<label>Autor</label><select id="fa"><option value="">Todos</option>${opt(authors,f.author)}</select><label>Género</label><select id="fg"><option value="">Todos</option>${opt(genres,f.genre)}</select>
    <label>Estado</label><select id="fs"><option value="">Todos</option><option value="leido" ${f.status==='leido'?'selected':''}>Leídos</option><option value="pendiente" ${f.status==='pendiente'?'selected':''}>Pendientes</option></select>
    <label>Estrellas</label><select id="fr"><option value="">Todas</option><option value="none" ${f.rating==='none'?'selected':''}>Sin valorar</option>${[5,4,3,2,1].map(n=>`<option value="${n}" ${f.rating==n?'selected':''}>${'★'.repeat(n)}</option>`).join('')}</select>
+   <div class="two"><div><label>Empezado desde</label><input type="date" id="fsd1" value="${f.sFrom||''}"></div><div><label>hasta</label><input type="date" id="fsd2" value="${f.sTo||''}"></div></div>
+   <div class="two"><div><label>Terminado desde</label><input type="date" id="fed1" value="${f.eFrom||''}"></div><div><label>hasta</label><input type="date" id="fed2" value="${f.eTo||''}"></div></div>
    <div class="two"><div><label>Incorporado desde</label><input type="date" id="fd1" value="${f.from}"></div><div><label>hasta</label><input type="date" id="fd2" value="${f.to}"></div></div>`,
-   [{label:'Aplicar',cls:'primary',get:m=>({author:$('#fa',m).value,genre:$('#fg',m).value,status:$('#fs',m).value,rating:$('#fr',m).value,from:$('#fd1',m).value,to:$('#fd2',m).value})},{label:'Quitar filtros',val:{author:'',genre:'',status:'',rating:'',from:'',to:''}},{label:'Cancelar',val:null}]);
+   [{label:'Aplicar',cls:'primary',get:m=>({author:$('#fa',m).value,genre:$('#fg',m).value,status:$('#fs',m).value,rating:$('#fr',m).value,from:$('#fd1',m).value,to:$('#fd2',m).value,sFrom:$('#fsd1',m).value,sTo:$('#fsd2',m).value,eFrom:$('#fed1',m).value,eTo:$('#fed2',m).value})},{label:'Quitar filtros',val:{author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:''}},{label:'Cancelar',val:null}]);
   if(r){S.f=r;renderLib()}}
 async function wfiltersDialog(){
   const genres=[...new Set(S.wish.flatMap(b=>b.genres||[]))].sort((a,b)=>a.localeCompare(b,'es')),f=S.wf;
@@ -621,7 +630,7 @@ const ACT={
   'new-book':()=>openForm('book'),'new-wish':()=>openForm('wish'),
   'open-book':t=>{location.hash='#/book/'+t.dataset.id},'open-wish':t=>{location.hash='#/wish/'+t.dataset.id},
   filters:filtersDialog,wfilters:wfiltersDialog,
-  'clear-f':()=>{S.f={author:'',genre:'',status:'',rating:'',from:'',to:''};S.q='';renderLib()},'clear-wf':()=>{S.wf={genre:'',prio:'',from:'',to:''};S.wq='';renderWish()},
+  'clear-f':()=>{S.f={author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:''};S.q='';renderLib()},'clear-wf':()=>{S.wf={genre:'',prio:'',from:'',to:''};S.wq='';renderWish()},
   'edit-book':t=>openForm('book',S.books.find(b=>b.id===t.dataset.id)),'edit-wish':t=>openForm('wish',S.wish.find(b=>b.id===t.dataset.id)),
   'del-book':async t=>{const b=S.books.find(x=>x.id===t.dataset.id),n=S.quotes.filter(q=>q.bookId===b.id).length;
     if(!await confirmDel('¿Eliminar este libro?',`Se eliminará «${esc(b.title)}» junto con sus ${n} cita${n===1?'':'s'} y tus observaciones. No se puede deshacer.`))return;
@@ -682,7 +691,7 @@ const ACT={
   backup:async()=>{const a=backupAge();const r=await dialog('Copia de seguridad',`<p class="muted small" style="margin:0 0 8px">Guarda <b>toda</b> tu biblioteca (libros, portadas, citas, observaciones y lista de deseos) en un archivo. Sirve para <b>cambiar de móvil</b> o recuperar tus datos. Se crea en tu dispositivo; no se envía a ningún servidor.</p><p class="small" style="margin:0 0 8px">${a===null?'Aún no has hecho ninguna copia.':`Última copia: hace ${a} día${a===1?'':'s'}.`}</p><p class="muted small" style="margin:0"><b>Para cambiar de móvil:</b> pulsa «Crear copia» y compártela por WhatsApp o correo (a ti mismo) o guárdala en Drive. En el móvil nuevo, abre la app, descarga el archivo y pulsa «Restaurar desde una copia».</p>`,
     [{label:'⬇ Crear copia de seguridad',cls:'primary',val:'export'},{label:'⬆ Restaurar desde una copia',val:'import'},{label:'Cerrar',val:null}]);
     if(r==='export')exportBackup();else if(r==='import'){toast('Elige el archivo copia_biblioteca_….json',3000);$('#file-json').click()}}};
-function formChanged(){const o=F.orig;if(!o)return true;const r=buildRecord();const k=['title','subtitle','synopsis','pubDate','publisher','isbn','language','notes','status','rating','priority','personalNote','coverUrl'];
+function formChanged(){const o=F.orig;if(!o)return true;const r=buildRecord();const k=['startDate','endDate','title','subtitle','synopsis','pubDate','publisher','isbn','language','notes','status','rating','priority','personalNote','coverUrl'];
   return k.some(x=>(r[x]||'')!==(o[x]||''))||authStr(r)!==authStr(o)||(r.genres||[]).join()!==(o.genres||[]).join()||r.coverBlob!==(o.coverBlob||null)||JSON.stringify(r.characters||[])!==JSON.stringify(o.characters||[])||JSON.stringify(r.formats||[])!==JSON.stringify(o.formats||[])}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const f=ACT[t.dataset.act];if(f){Promise.resolve(f(t,e)).catch(err=>toast('Error: '+(err&&err.message||err),5000))}});
 document.addEventListener('input',e=>{const t=e.target;
@@ -693,6 +702,7 @@ document.addEventListener('change',e=>{const t=e.target;
   else if(t.id==='srcsel'){setPref('searchSrc',t.value);toast('Buscador: '+(SRC_OPTS.find(o=>o[0]===t.value)||[,''])[1],2200)}
   else if(t.id==='file-img'||t.id==='file-cam'){const f=t.files[0];t.value='';if(!f||!F)return;collect();fileToBlob(f).then(b=>{F.coverBlob=b;F.coverUrl='';renderForm();scheduleDraft();toast('Portada añadida')})}
   else if(t.id==='file-json'){const f=t.files[0];t.value='';if(f)importJSON(f)}
+  else if(t.id==='f-status'&&F){collect();renderForm();scheduleDraft()}
   else if(t.id&&t.id.startsWith('f-')&&F)scheduleDraft()});
 
 /* ======================= Arranque ======================= */
