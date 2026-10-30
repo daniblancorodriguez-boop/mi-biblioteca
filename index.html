@@ -164,16 +164,31 @@ async function searchOL(title,author){
   const p=new URLSearchParams({limit:'10',fields:'key,title,subtitle,author_name,first_publish_year,publisher,isbn,cover_i,cover_edition_key,language,subject'});
   if(title)p.set('title',title);if(author)p.set('author',author);
   const r=await fetchT('https://openlibrary.org/search.json?'+p);if(!r.ok)throw new Error('Open Library respondió '+r.status);
-  const j=await r.json();
+  let j=await r.json();
+  if(!(j.docs||[]).length&&title){const p2=new URLSearchParams({limit:'10',q:[title,author].filter(Boolean).join(' '),fields:p.get('fields')});const r2=await fetchT('https://openlibrary.org/search.json?'+p2);if(r2.ok)j=await r2.json()}
   return (j.docs||[]).map(d=>({src:'Open Library',key:d.key,ed:d.cover_edition_key,title:d.title||'',subtitle:d.subtitle||'',authors:d.author_name||[],year:d.first_publish_year||'',
     publisher:(d.publisher||[])[0]||'',isbn:(d.isbn||[]).find(x=>x.length===13)||'',
     cover:d.cover_i?`https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg?default=false`:'',thumb:d.cover_i?`https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg?default=false`:'',
     langs:d.language||[],subjects:(d.subject||[]).slice(0,5)}))}
+const getPref=(k,d)=>{try{return localStorage.getItem(k)||d}catch{return d}};
+const setPref=(k,v)=>{try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch{}};
+const SRC_OPTS=[['ol+apple','Open Library + Apple Books (recomendado)'],['ol','Solo Open Library'],['apple','Solo Apple Books'],['gb','Solo Google Books'],['all','Todos (incluye Google Books)']];
+const stripHtml=h=>{try{return new DOMParser().parseFromString(h||'','text/html').body.textContent.trim()}catch{return String(h||'').replace(/<[^>]+>/g,'')}};
 async function gbQuery(q){
-  const r=await fetchT('https://www.googleapis.com/books/v1/volumes?maxResults=12&printType=books&orderBy=relevance&q='+encodeURIComponent(q));
-  if(r.status===429||r.status===403)throw new Error('Google Books ha alcanzado su límite de consultas; vuelve a intentarlo en unos minutos');
+  const key=getPref('gbKey','');
+  const r=await fetchT('https://www.googleapis.com/books/v1/volumes?maxResults=12&printType=books&orderBy=relevance&q='+encodeURIComponent(q)+(key?'&key='+encodeURIComponent(key):''));
+  if(r.status===429)throw new Error('Google Books ha alcanzado su límite de consultas. Usa otra fuente o añade tu clave gratuita en «Clave de Google»');
+  if(r.status===403||r.status===400)throw new Error(key?'Google Books rechazó tu clave o la consulta':'Google Books ha rechazado la consulta (límite sin clave). Usa otra fuente o añade tu clave gratuita en «Clave de Google»');
   if(!r.ok)throw new Error('Google Books respondió '+r.status);
   return (await r.json()).items||[]}
+async function searchApple(title,author){
+  const term=[title,author].filter(Boolean).join(' ');
+  const r=await fetchT('https://itunes.apple.com/search?media=ebook&entity=ebook&country=ES&limit=15&term='+encodeURIComponent(term));
+  if(!r.ok)throw new Error('Apple Books respondió '+r.status);
+  const j=await r.json();
+  return (j.results||[]).filter(x=>x.trackName).map(x=>{const cov=(x.artworkUrl100||'').replace('100x100bb','600x600bb');
+    return {src:'Apple Books',ap:{synopsis:stripHtml(x.description)},title:x.trackName,subtitle:'',authors:x.artistName?x.artistName.split(/\s*(?:,| y | & )\s*/).filter(Boolean):[],year:(x.releaseDate||'').slice(0,4),
+      publisher:'',isbn:'',cover:cov,thumb:(x.artworkUrl100||cov),subjects:(x.genres||[]).filter(g=>!/^(books|libros)$/i.test(g)).slice(0,4)}})}
 async function searchGB(title,author){
   let items=await gbQuery('intitle:'+title+(author?' inauthor:'+author:''));
   if(!items.length)items=await gbQuery(title+(author?' '+author:'')); // búsqueda libre si la estructurada no da nada
@@ -187,7 +202,8 @@ async function searchGB(title,author){
 
 async function resolveResult(r){ // devuelve campos listos para aplicar
   const d={title:r.title,subtitle:r.subtitle,authors:r.authors,publisher:r.publisher,isbn:r.isbn,pubDate:String(r.year||''),genres:r.subjects||[],language:'',synopsis:'',characters:[],notes:[]};
-  if(r.src==='Google Books'){d.synopsis=r.gb.synopsis;d.pubDate=r.gb.pubDate||d.pubDate;d.language=LANGS[r.gb.lang]||'';}
+  if(r.src==='Apple Books'){d.synopsis=r.ap.synopsis}
+  else if(r.src==='Google Books'){d.synopsis=r.gb.synopsis;d.pubDate=r.gb.pubDate||d.pubDate;d.language=LANGS[r.gb.lang]||'';}
   else{
     const [ed,wk]=await Promise.allSettled([r.ed?fetchT(`https://openlibrary.org/books/${r.ed}.json`).then(x=>x.json()):Promise.reject(),r.key?fetchT(`https://openlibrary.org${r.key}.json`).then(x=>x.json()):Promise.reject()]);
     if(ed.status==='fulfilled'){const e=ed.value;d.publisher=(e.publishers||[])[0]||d.publisher;d.pubDate=e.publish_date||d.pubDate;d.isbn=(e.isbn_13||[])[0]||d.isbn;d.subtitle=e.subtitle||d.subtitle;
@@ -290,7 +306,7 @@ function renderBook(id){
   $('#top').innerHTML=`<div class="row"><button class="btn ghost" data-act="back">← Biblioteca</button><span class="grow"></span><button class="btn small" data-act="edit-book" data-id="${id}">Editar</button><button class="btn small danger" data-act="del-book" data-id="${id}">Eliminar</button></div>`;
   $('#main').innerHTML=`<div class="detail">
    <div class="hero">${coverHTML(b)}<div><h2 class="serif">${esc(b.title)}</h2>${b.subtitle?`<div class="muted">${esc(b.subtitle)}</div>`:''}<div style="margin-top:4px">${esc(authStr(b))||'<span class="muted">Autor desconocido</span>'}</div>
-     <div style="margin-top:8px"><button class="btn small" data-act="toggle-status" data-id="${id}">${b.status==='leido'?'✓ Leído':'⏳ Pendiente de leer'}</button></div><div style="margin-top:8px">${cdlButton(b)}</div></div></div>
+     <div style="margin-top:8px"><button class="btn small" data-act="toggle-status" data-id="${id}">${b.status==='leido'?'✓ Leído':'⏳ Pendiente de leer'}</button></div>${b.status==='leido'&&(b.formats||[]).length?`<div class="small" style="margin-top:8px">${(b.formats||[]).map(f=>f==='fisico'?'📕 Físico':'📱 Electrónico').join(' &nbsp;·&nbsp; ')}</div>`:''}<div style="margin-top:8px">${cdlButton(b)}</div></div></div>
    <section><h3>Mi valoración</h3>${stars(b.rating||0,'rate')}<div class="muted small">${b.rating?`${b.rating} de 5 · <button class="btn ghost small" data-act="rate" data-v="0" style="min-height:0;padding:0">quitar valoración</button>`:'Sin valorar'}</div></section>
    <section><h3>Sinopsis y datos ${srcPill(b)}</h3>${b.synopsis?`<p style="white-space:pre-wrap">${esc(b.synopsis)}</p>`:'<p class="muted">Sin sinopsis.</p>'}${dlRows(b)}</section>
    <section><h3>Personajes principales</h3>${(b.characters||[]).length?b.characters.map(c=>`<div class="chr"><b>${esc(c.name)}</b>${c.desc?`<div class="small">${esc(c.desc)}</div>`:'<div class="small muted">Sin descripción</div>'}</div>`).join(''):'<p class="muted">Aún no hay personajes.</p>'}</section>
@@ -315,10 +331,10 @@ function renderWishItem(id){
 /* ======================= Formulario de alta / edición ======================= */
 let F=null; // estado del formulario
 const FIELDS=['title','subtitle','authors','genres','pubDate','publisher','isbn','language','synopsis'];
-function blank(kind){return {kind,id:uid(),isNew:true,title:'',subtitle:'',authors:'',genres:'',pubDate:'',publisher:'',isbn:'',language:'',synopsis:'',
+function blank(kind){return {kind,id:uid(),isNew:true,formats:[],title:'',subtitle:'',authors:'',genres:'',pubDate:'',publisher:'',isbn:'',language:'',synopsis:'',
   characters:[],quotes:[],notes:'',rating:0,status:'pendiente',priority:'',personalNote:'',coverBlob:null,coverUrl:'',
   edited:new Set(),auto:null,autoApplied:false,results:null,searching:false,errs:[],metadataSource:'',metadataVerified:false}}
-function fromItem(kind,it){const f=blank(kind);Object.assign(f,{id:it.id,isNew:false,orig:it,title:it.title||'',subtitle:it.subtitle||'',authors:authStr(it),genres:(it.genres||[]).join(', '),pubDate:it.pubDate||'',publisher:it.publisher||'',isbn:it.isbn||'',language:it.language||'',synopsis:it.synopsis||'',
+function fromItem(kind,it){const f=blank(kind);Object.assign(f,{id:it.id,isNew:false,orig:it,formats:[...(it.formats||[])],title:it.title||'',subtitle:it.subtitle||'',authors:authStr(it),genres:(it.genres||[]).join(', '),pubDate:it.pubDate||'',publisher:it.publisher||'',isbn:it.isbn||'',language:it.language||'',synopsis:it.synopsis||'',
   characters:(it.characters||[]).map(c=>({...c})),notes:it.notes||'',rating:it.rating||0,status:it.status||'pendiente',priority:it.priority||'',personalNote:it.personalNote||'',coverBlob:it.coverBlob||null,coverUrl:it.coverUrl||'',metadataSource:it.metadataSource||'',metadataVerified:!!it.metadataVerified});
   FIELDS.forEach(k=>f.edited.add(k));return f} // datos ya guardados: una búsqueda nueva no los pisa
 async function openForm(kind,item){
@@ -331,6 +347,7 @@ async function openForm(kind,item){
   else F=fromItem(kind,item);
   renderForm()}
 function collect(){const s=$('#sheet');if(!s||!F)return;
+  if(s.querySelector('.fmt'))F.formats=[...s.querySelectorAll('.fmt:checked')].map(x=>x.value);
   FIELDS.forEach(k=>{const e=$('#f-'+k,s);if(e)F[k]=e.value});
   const n=$('#f-notes',s);if(n)F.notes=n.value;const pn=$('#f-pnote',s);if(pn)F.personalNote=pn.value;const pr=$('#f-prio',s);if(pr)F.priority=pr.value;const st=$('#f-status',s);if(st)F.status=st.value;
   F.characters=[...s.querySelectorAll('.chr-row')].map(r=>({name:$('.cn',r).value.trim(),desc:$('.cd',r).value.trim()}));}
@@ -355,11 +372,13 @@ function renderForm(){
   const el=document.createElement('div');el.id='sheet';el.className='sheet';
   el.innerHTML=`<div class="bar row"><h2 class="grow" style="margin:0;font-size:1.25rem">${F.isNew?(book?'Añadir libro':'Añadir a la lista de deseos'):'Editar'}</h2></div>
   <div class="body">
+   ${book?`<div style="display:flex;gap:26px;margin-top:16px;align-items:center"><span class="muted small" style="margin-right:-8px">Formato:</span><label class="chk" style="margin:0;color:var(--ink);font-size:1rem"><input type="checkbox" class="fmt" value="fisico" ${(F.formats||[]).includes('fisico')?'checked':''}> Físico</label><label class="chk" style="margin:0;color:var(--ink);font-size:1rem"><input type="checkbox" class="fmt" value="electronico" ${(F.formats||[]).includes('electronico')?'checked':''}> Electrónico</label></div>`:''}
    <label for="f-title">Título *</label><input id="f-title" value="${esc(F.title)}" placeholder="Título del libro" autocomplete="off">
    <label for="f-authors">Autor o autores (opcional, separa con comas)</label><input id="f-authors" value="${esc(F.authors)}" placeholder="Para identificar la edición correcta" autocomplete="off">
    <div class="banner" style="margin-top:16px"><b>Completar automáticamente</b> <span class="small muted">(opcional)</span>
-    <div class="small muted" style="margin:4px 0 8px">Busca el libro en Open Library y Google Books. También puedes saltarte esto y rellenar todo a mano.</div>
-    <div class="row" style="flex-wrap:wrap"><button class="btn primary small" data-act="search">🔍 Buscar en Internet</button></div></div>
+    <div class="small muted" style="margin:4px 0 8px">También puedes saltarte esto y rellenar todo a mano.</div>
+    <label for="srcsel" style="margin-top:6px">Buscar en</label><select id="srcsel">${SRC_OPTS.map(o=>`<option value="${o[0]}" ${getPref('searchSrc','ol+apple')===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>
+    <div class="row" style="flex-wrap:wrap;margin-top:10px"><button class="btn primary small" data-act="search">🔍 Buscar en Internet</button><button class="btn small ghost" data-act="gbkey">⚙ Clave de Google</button></div></div>
    ${errs}${res}${autoB}
    <h3 style="margin:24px 0 6px">Portada</h3>
    <div class="row" style="align-items:flex-start"><div style="width:96px;flex:0 0 96px">${hasCover?coverHTML(cov):'<div class="cover"><div class="ph" style="background:#e9e0cf"><span>Sin portada</span></div></div>'}</div>
@@ -408,7 +427,7 @@ function buildRecord(){
   const now=new Date().toISOString();const base=F.orig||{};
   const r={...base,id:F.id,title:F.title.trim(),subtitle:F.subtitle.trim(),authors:splitList(F.authors),genres:splitList(F.genres),pubDate:F.pubDate.trim(),publisher:F.publisher.trim(),isbn:F.isbn.trim(),language:F.language.trim(),synopsis:F.synopsis.trim(),
     coverBlob:F.coverBlob||null,coverUrl:F.coverBlob?'':(F.coverUrl||''),metadataSource:F.metadataSource||'',metadataVerified:!!(F.auto&&F.auto.confirmed)||(!F.auto&&F.metadataVerified),addedAt:base.addedAt||now,updatedAt:now};
-  if(F.kind==='book'){r.characters=F.characters.filter(c=>c.name);r.rating=F.rating||null;r.status=F.status;r.notes=F.notes}
+  if(F.kind==='book'){r.formats=(F.formats||[]).filter(x=>x==='fisico'||x==='electronico');r.characters=F.characters.filter(c=>c.name);r.rating=F.rating||null;r.status=F.status;r.notes=F.notes}
   else{r.priority=F.priority||'';r.personalNote=F.personalNote.trim()}
   return r}
 async function saveForm(){
@@ -617,12 +636,22 @@ const ACT={
   'rm-chr':t=>{t.closest('.chr-row').remove();scheduleDraft()},
   search:async()=>{collect();const title=F.title.trim(),author=F.authors.trim();
     if(!title){toast('Escribe el título para buscar.');$('#f-title')?.focus();return}
+    const pref=getPref('searchSrc','ol+apple');
+    const jobs=[];if(['ol+apple','ol','all'].includes(pref))jobs.push(['Open Library',searchOL(title,author)]);
+    if(['ol+apple','apple','all'].includes(pref))jobs.push(['Apple Books',searchApple(title,author)]);
+    if(['gb','all'].includes(pref))jobs.push(['Google Books',searchGB(title,author)]);
     F.searching=true;F.results=null;F.errs=[];renderForm();
-    const [a,b]=await Promise.allSettled([searchOL(title,author),searchGB(title,author)]);
-    const res=[];if(a.status==='fulfilled')res.push(...a.value);if(b.status==='fulfilled')res.push(...b.value);
-    if(!navigator.onLine||(a.status==='rejected'&&b.status==='rejected'))F.errs=['No se pudo conectar con los servicios de búsqueda. Comprueba tu conexión; puedes seguir rellenando los datos a mano. Lo que has escrito no se ha perdido.'];
-    else{if(a.status==='rejected')F.errs.push('Open Library no ha respondido ('+(a.reason&&a.reason.message||'error')+'). Se muestran solo los resultados de Google Books.');if(b.status==='rejected')F.errs.push((b.reason&&b.reason.message||'Google Books no ha respondido')+'. Se muestran solo los resultados de Open Library.')}
+    const out=await Promise.allSettled(jobs.map(j=>j[1]));
+    const res=[];out.forEach(o=>{if(o.status==='fulfilled')res.push(...o.value)});
+    const failed=out.map((o,i)=>o.status==='rejected'?[jobs[i][0],o.reason]:null).filter(Boolean);
+    if(!navigator.onLine||failed.length===jobs.length){
+      const gbMsg=failed.find(f=>f[0]==='Google Books'&&f[1]&&/Google Books/.test(f[1].message||''));
+      F.errs=[gbMsg&&failed.length===1?gbMsg[1].message+'.':'No se pudo conectar con los servicios de búsqueda. Comprueba tu conexión o prueba con otra fuente; puedes seguir rellenando los datos a mano. Lo que has escrito no se ha perdido.']}
+    else failed.forEach(f=>F.errs.push((f[0]==='Google Books'&&f[1]&&f[1].message?f[1].message:f[0]+' no ha respondido')+'. Se muestran los resultados de las otras fuentes.'));
     F.searching=false;F.results=F.errs.length&&!res.length?null:res.filter(r=>r.title);F._raw=F.results;renderForm()},
+  gbkey:async()=>{collect();const r=await dialog('Clave de Google Books',`<p class="muted small" style="margin:0 0 8px">Sin clave, Google Books comparte un límite con todo el mundo y suele fallar. Con tu propia clave gratuita tienes tu cupo personal.</p><p class="muted small" style="margin:0 0 8px">Se crea gratis en <b>console.cloud.google.com</b> (activar «Books API» y crear una clave de API). Se guarda solo en este dispositivo y no se incluye en las copias de seguridad.</p><label for="gk">Clave de API</label><input id="gk" value="${esc(getPref('gbKey',''))}" placeholder="AIza…" autocomplete="off" autocapitalize="off" spellcheck="false">`,
+    [{label:'Guardar',cls:'primary',get:m=>({k:$('#gk',m).value.trim()})},{label:'Cancelar',val:null}]);
+    if(r){setPref('gbKey',r.k);toast(r.k?'Clave guardada':'Clave eliminada')}},
   'use-res':t=>applyResult(F.results[+t.dataset.i],false),'use-cover':t=>applyResult(F.results[+t.dataset.i],true),
   'confirm-auto':()=>{collect();F.auto.confirmed=true;F.metadataVerified=true;renderForm();toast('Datos confirmados ✓')},
   'reject-auto':async()=>{if(!await ask('¿Rechazar los datos automáticos?','Se vaciarán los campos que rellenó la búsqueda (título y autor se conservan).',[{label:'Rechazar y vaciar',cls:'danger',val:true},{label:'Cancelar',val:false}]))return;
@@ -646,13 +675,14 @@ const ACT={
     [{label:'⬇ Crear copia de seguridad',cls:'primary',val:'export'},{label:'⬆ Restaurar desde una copia',val:'import'},{label:'Cerrar',val:null}]);
     if(r==='export')exportBackup();else if(r==='import'){toast('Elige el archivo copia_biblioteca_….json',3000);$('#file-json').click()}}};
 function formChanged(){const o=F.orig;if(!o)return true;const r=buildRecord();const k=['title','subtitle','synopsis','pubDate','publisher','isbn','language','notes','status','rating','priority','personalNote','coverUrl'];
-  return k.some(x=>(r[x]||'')!==(o[x]||''))||authStr(r)!==authStr(o)||(r.genres||[]).join()!==(o.genres||[]).join()||r.coverBlob!==(o.coverBlob||null)||JSON.stringify(r.characters||[])!==JSON.stringify(o.characters||[])}
+  return k.some(x=>(r[x]||'')!==(o[x]||''))||authStr(r)!==authStr(o)||(r.genres||[]).join()!==(o.genres||[]).join()||r.coverBlob!==(o.coverBlob||null)||JSON.stringify(r.characters||[])!==JSON.stringify(o.characters||[])||JSON.stringify(r.formats||[])!==JSON.stringify(o.formats||[])}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const f=ACT[t.dataset.act];if(f){Promise.resolve(f(t,e)).catch(err=>toast('Error: '+(err&&err.message||err),5000))}});
 document.addEventListener('input',e=>{const t=e.target;
   if(t.id==='q'){S.q=t.value;renderGrid()}else if(t.id==='wq'){S.wq=t.value;renderWGrid()}
   else if(t.closest&&t.closest('#sheet')){if(t.id&&t.id.startsWith('f-')&&F)F.edited.add(t.id.slice(2));scheduleDraft()}});
 document.addEventListener('change',e=>{const t=e.target;
   if(t.id==='sort'){S.sort=t.value;renderGrid()}else if(t.id==='wsort'){S.wsort=t.value;renderWGrid()}
+  else if(t.id==='srcsel'){setPref('searchSrc',t.value);toast('Buscador: '+(SRC_OPTS.find(o=>o[0]===t.value)||[,''])[1],2200)}
   else if(t.id==='file-img'||t.id==='file-cam'){const f=t.files[0];t.value='';if(!f||!F)return;collect();fileToBlob(f).then(b=>{F.coverBlob=b;F.coverUrl='';renderForm();scheduleDraft();toast('Portada añadida')})}
   else if(t.id==='file-json'){const f=t.files[0];t.value='';if(f)importJSON(f)}
   else if(t.id&&t.id.startsWith('f-')&&F)scheduleDraft()});
