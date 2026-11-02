@@ -219,7 +219,7 @@ const hue=s=>{let h=0;for(const c of s||'')h=(h*31+c.charCodeAt(0))%360;return h
 const cleanIsbn=s=>(s||'').replace(/[^0-9Xx]/g,'').toUpperCase();
 const PRIO={alta:3,media:2,baja:1};
 const LANGS={spa:'Español',es:'Español',eng:'Inglés',en:'Inglés',fre:'Francés',fra:'Francés',fr:'Francés',ger:'Alemán',deu:'Alemán',de:'Alemán',ita:'Italiano',it:'Italiano',por:'Portugués',pt:'Portugués',cat:'Catalán',ca:'Catalán',glg:'Gallego',gl:'Gallego',eus:'Euskera',baq:'Euskera',eu:'Euskera'};
-const APP_VERSION='19 · en proceso y marcapáginas';
+const APP_VERSION='20 · copia en Google Drive';
 const IC={home:'m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10',book:'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20',mark:'m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z',
   quote:'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zM15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
   chart:'M3 3v16a2 2 0 0 0 2 2h16M18 17V9M13 17V5M8 17v-3',clock:'M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',cal:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
@@ -472,7 +472,8 @@ function renderHome(){
   const readBox=lee.length?`<div class="loanbox"><h2 class="serif">Leyendo ahora</h2>${lee.map(b=>{const m=(b.marks||[]).slice(-1)[0];return `<div class="lrow2"><button class="lrow" data-act="open-book" data-id="${b.id}"><b>${esc(b.title)}</b><span class="small muted">${m?'pág. '+esc(m.page):'sin marcar'}</span></button><button class="btn small" data-act="mark-add" data-id="${b.id}" aria-label="Marcar página de ${esc(b.title)}">🔖</button></div>`}).join('')}</div>`:'';
   const loaned=S.books.filter(b=>b.loan).sort((a,b)=>a.loan.since.localeCompare(b.loan.since)),ld=b=>Math.max(0,dayDiff(b.loan.since,today()));
   const loanBox=loaned.length?`<div class="loanbox"><h2 class="serif">Prestados</h2>${loaned.map(b=>`<button class="lrow" data-act="open-book" data-id="${b.id}"><b>${esc(b.title)}</b><span class="small muted">${esc(b.loan.to)}</span><span class="ld${ld(b)>=30?' warn':''}">${ld(b)===0?'Hoy':plural(ld(b),'día','días')}</span></button>`).join('')}${loaned.some(b=>ld(b)>=30)?'<p class="small" style="margin:6px 0 4px">Los marcados en rojo llevan 30 días o más fuera: quizá toque pedirlos de vuelta.</p>':''}</div>`:'';
-  $('#main').innerHTML=warn+hero+(S.books.length?'':'<p class="muted" style="margin:16px 0;text-align:center">Pulsa <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p>')+readBox+pills+loanBox+goal+qod;
+  const gdWarn=gdOn()&&getPref('gdNeed','')?`<div class="banner"><b>Copia en Google Drive</b><div class="small">Hay que renovar la conexión para seguir subiendo copias.</div><button class="btn small primary" data-act="gd-renew" style="margin-top:8px">🔑 Renovar conexión</button></div>`:'';
+  $('#main').innerHTML=gdWarn+warn+hero+(S.books.length?'':'<p class="muted" style="margin:16px 0;text-align:center">Pulsa <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p>')+readBox+pills+loanBox+goal+qod;
   if(pool.length)initCarousel(pool)}
 
 /* ---------- Colecciones (trilogías, sagas, series) ---------- */
@@ -999,6 +1000,62 @@ async function maybeRemind(){const days=+getPref('remindDays','14');if(!days||!S
   const r=await dialog('Es hora de guardar una copia',`<p class="muted small" style="margin:0">${age===null?'Aún no has hecho ninguna copia de tus libros.':`Tu última copia tiene ${age} días.`} Tus libros solo están en este móvil: una copia compartida (WhatsApp, correo o Drive) te protege si lo pierdes o lo cambias. Son dos toques.</p>`,
     [{label:'💾 Crear copia ahora',cls:'primary',val:'now'},{label:'Recordármelo mañana',val:'later'},{label:'No volver a avisarme',val:'never'}]);
   if(r==='now')exportBackup();else if(r==='never'){setPref('remindDays','0');toast('Vale, no te avisaré. Puedes reactivarlo en 💾.',3500)}else setPref('remindAt',String(Date.now()+864e5))}
+/* ---------- Copia automática en Google Drive (carpeta oculta de la app) ---------- */
+const GD_CLIENT_ID='912447401843-oedp5o1dcnf1qb6tevgibbtcj2nkqeer.apps.googleusercontent.com';
+const GD_SCOPE='https://www.googleapis.com/auth/drive.appdata',GD_KEEP=10;
+let gdTok=null,gdTokExp=0;
+const gdOn=()=>getPref('gdOn','')==='1';
+const gdSig=()=>[S.books.length,S.quotes.length,S.wish.length,[...S.books,...S.wish].reduce((m,x)=>(x.updatedAt||'')>m?x.updatedAt:m,''),S.quotes.reduce((m,x)=>(x.createdAt||'')>m?x.createdAt:m,'')].join('|');
+function gdLoad(){return new Promise((ok,ko)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();
+  const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.onload=()=>ok();s.onerror=()=>ko(new Error('No se pudo cargar el acceso de Google (¿sin conexión?)'));document.head.appendChild(s)})}
+async function gdToken(interactive){
+  if(gdTok&&Date.now()<gdTokExp-60000)return gdTok;
+  if(!GD_CLIENT_ID)throw new Error('Falta configurar el identificador de Google');
+  await gdLoad();
+  return new Promise((ok,ko)=>{
+    const c=google.accounts.oauth2.initTokenClient({client_id:GD_CLIENT_ID,scope:GD_SCOPE,
+      callback:r=>{if(r.error)return ko(new Error(r.error));gdTok=r.access_token;gdTokExp=Date.now()+(+r.expires_in||3600)*1000;ok(gdTok)},
+      error_callback:e=>ko(new Error((e&&e.type)||'cancelado'))});
+    c.requestAccessToken({prompt:interactive?'':'none'})})}
+async function gdApi(path,opt,interactive){const t=await gdToken(interactive);
+  const r=await fetch('https://www.googleapis.com/'+path,{...(opt||{}),headers:{Authorization:'Bearer '+t,...((opt||{}).headers||{})}});
+  if(r.status===401){gdTok=null;throw new Error('La sesión de Google ha caducado')}
+  if(!r.ok)throw new Error('Google Drive respondió '+r.status);return r}
+async function gdList(interactive){const r=await gdApi('drive/v3/files?spaces=appDataFolder&orderBy=createdTime%20desc&pageSize=50&fields=files(id,name,createdTime,size)',{},interactive);return (await r.json()).files||[]}
+async function gdUpload(interactive){
+  if(!(S.books.length||S.wish.length))return null; // nunca se sube una biblioteca vacía: así no se pisa una buena copia
+  const b=await buildBackup(),name='copia_'+today()+'_'+new Date().toTimeString().slice(0,5).replace(':','')+'.json',bd='mb'+uid().replace(/-/g,'').slice(0,10);
+  const body=`--${bd}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify({name,parents:['appDataFolder']})}\r\n--${bd}\r\nContent-Type: application/json\r\n\r\n${b.text}\r\n--${bd}--`;
+  await gdApi('upload/drive/v3/files?uploadType=multipart',{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+bd},body},interactive);
+  setPref('gdLast',String(Date.now()));setPref('gdSig',gdSig());setPref('gdNeed','');
+  try{const fl=await gdList(false);for(const f of fl.slice(GD_KEEP))await gdApi('drive/v3/files/'+f.id,{method:'DELETE'},false)}catch{}
+  return name}
+async function gdAuto(){ // al abrir la app: sube si hay cambios y han pasado al menos 20 horas desde la última subida
+  if(!gdOn()||!GD_CLIENT_ID||!navigator.onLine)return;
+  const last=+getPref('gdLast','0');
+  if(getPref('gdSig','')===gdSig()||(last&&Date.now()-last<20*36e5))return;
+  try{if(await gdUpload(false)){toast('Copia subida a Google Drive ☁',2200);render()}}catch{setPref('gdNeed','1');render()}}
+async function gdRestore(){
+  let fl;try{fl=await gdList(true)}catch(e){toast('No se pudo leer Drive: '+e.message,4500);return}
+  if(!fl.length){toast('Aún no hay copias en tu Drive.',3000);return}
+  const v=await dialog('Restaurar desde Drive',`<p class="muted small" style="margin:0">Elige una copia. Se añadirán los libros que falten; los que ya tienes no se tocan.</p>`,
+    [...fl.slice(0,8).map(f=>({label:`${fmtDate(f.createdTime)} · ${Math.max(1,Math.round((+f.size||0)/1024))} KB`,val:f.id})),{label:'Cancelar',val:null}]);
+  if(!v)return;
+  try{toast('Descargando copia…',1800);const r=await gdApi('drive/v3/files/'+v+'?alt=media',{},true);await importBackup(JSON.parse(await r.text()))}
+  catch(e){toast('No se pudo restaurar: '+e.message,5000)}}
+async function gdDialog(){for(;;){
+  const on=gdOn(),last=+getPref('gdLast','0'),d=daysSince(last);
+  const info=!GD_CLIENT_ID?'Esta función aún no está activada en esta versión.':on?`Conectada. ${last?'Última subida: '+(d===0?'hoy':'hace '+plural(d,'día','días'))+'.':'Todavía no se ha subido ninguna copia.'}${getPref('gdNeed','')?'<br><b>Hay que renovar la conexión</b>: pulsa «Renovar conexión».':''}`:'Guarda tu biblioteca en una carpeta oculta de <b>tu</b> Google Drive. La app solo ve esa carpeta, no el resto de tu Drive.';
+  const btns=!GD_CLIENT_ID?[{label:'Cerrar',val:null}]:on?[...(getPref('gdNeed','')?[{label:'🔑 Renovar conexión',cls:'primary',val:'renew'}]:[]),{label:'☁ Subir copia ahora',cls:getPref('gdNeed','')?'':'primary',val:'up'},{label:'⬇ Restaurar desde Drive',val:'restore'},{label:'Desconectar',val:'off'},{label:'Cerrar',val:null}]:[{label:'Conectar con Google Drive',cls:'primary',val:'on'},{label:'Cerrar',val:null}];
+  const r=await dialog('☁ Copia en Google Drive',`<p class="muted small" style="margin:0 0 8px">${info}</p>${on?'<p class="muted small" style="margin:0">Se sube sola al abrir la app si hay cambios (como máximo una vez al día) y se conservan las últimas '+GD_KEEP+'. No funciona con la app cerrada.</p>':''}`,btns);
+  if(!r)return;
+  try{
+    if(r==='on'||r==='renew'){await gdToken(true);setPref('gdOn','1');toast('Subiendo copia…',1800);const n=await gdUpload(true);toast(n?'Copia subida a Google Drive ☁':'Conectado. Se subirá cuando haya libros.',3000)}
+    else if(r==='up'){if(!(S.books.length||S.wish.length)){toast('No hay nada que subir todavía.');continue}toast('Subiendo copia…',1800);await gdUpload(true);toast('Copia subida a Google Drive ☁',3000)}
+    else if(r==='restore'){await gdRestore();return}
+    else if(r==='off'){try{if(gdTok&&window.google)google.accounts.oauth2.revoke(gdTok)}catch{}gdTok=null;setPref('gdOn','');setPref('gdNeed','');toast('Desconectado. Tus copias siguen en tu Drive.',3500)}
+  }catch(e){toast('No se pudo completar: '+e.message,5000)}}}
+
 async function importJSON(file){
   try{const j=JSON.parse(await blobRead(file,'text'));if(j&&j.app==='mi-biblioteca'&&j.type==='backup'){await importBackup(j);return}
     if(!j||j.app!=='mi-biblioteca'||j.type!=='wishlist'||!Array.isArray(j.items))throw new Error('no es una exportación de lista de deseos de esta app');
@@ -1057,7 +1114,7 @@ const ACT={
   back:()=>{location.hash='#/'},'back-wish':()=>{location.hash='#/wish'},
   'new-book':()=>openForm('book'),'new-wish':()=>openForm('wish'),
   'open-book':t=>{location.hash='#/book/'+t.dataset.id},
-  scan:scanFlow,'share-card':t=>shareCard(t.dataset.id),
+  scan:scanFlow,gdrive:gdDialog,'gd-renew':async()=>{try{await gdToken(true);toast('Subiendo copia…',1800);await gdUpload(true);toast('Copia subida a Google Drive ☁',3000);render()}catch(e){toast('No se pudo renovar: '+e.message,5000)}},'share-card':t=>shareCard(t.dataset.id),
   'loan-new':async t=>{const b=S.books.find(x=>x.id===t.dataset.id);if(!b)return;
     const r=await dialog('Prestar «'+b.title+'»',`<label for="lw">¿A quién se lo dejas?</label><input id="lw" autocomplete="off" placeholder="Nombre"><label for="ld">Desde</label><input type="date" id="ld" value="${today()}"><label for="ln">Nota (opcional)</label><input id="ln" autocomplete="off">`,
      [{label:'Guardar préstamo',cls:'primary',get:m=>{const to=$('#lw',m).value.trim();if(!to){$('#lw',m).focus();return undefined}return{to,since:$('#ld',m).value||today(),note:$('#ln',m).value.trim()}}},{label:'Cancelar',val:null}]);
@@ -1142,10 +1199,11 @@ const ACT={
     [{label:'⬇ Crear copia de seguridad',cls:'primary',val:'export'},{label:'⬆ Restaurar desde una copia',val:'import'},{label:`🕘 Versiones automáticas (${nsn})`,val:'snaps'},{label:'Cerrar',val:null}]);
     if(r==='snaps')snapsDialog();else if(r==='export')exportBackup();else if(r==='import'){toast('Elige el archivo copia_biblioteca_….json',3000);$('#file-json').click()}},
   settings:async()=>{for(;;){const r=await dialog('Ajustes',`<p class="muted small" style="margin:0">Versión de la app: ${APP_VERSION}</p>`,
-    [{label:'🌙 Aspecto: '+THEME_LBL[getPref('theme','auto')],val:'theme'},{label:'🔊 Sonidos: '+(soundOn()?'sí':'no'),val:'sound'},{label:'⏰ Recordatorio de copia: '+REMIND_LBL(getPref('remindDays','14')),val:'remind'},{label:'🔄 Actualizar la app',val:'update'},{label:'Cerrar',val:null}]);
+    [{label:'🌙 Aspecto: '+THEME_LBL[getPref('theme','auto')],val:'theme'},{label:'🔊 Sonidos: '+(soundOn()?'sí':'no'),val:'sound'},{label:'☁ Copia en Google Drive: '+(gdOn()?'activada':'desactivada'),val:'gdrive'},{label:'⏰ Recordatorio de copia: '+REMIND_LBL(getPref('remindDays','14')),val:'remind'},{label:'🔄 Actualizar la app',val:'update'},{label:'Cerrar',val:null}]);
     if(r==='theme'){const o={auto:'dark',dark:'light',light:'auto'}[getPref('theme','auto')]||'auto';setPref('theme',o);applyTheme();sndClick()}
     else if(r==='sound'){setPref('sound',soundOn()?'off':'on');sndClick()}
     else if(r==='remind'){const o={'7':'14','14':'30','30':'0','0':'7'}[getPref('remindDays','14')]||'14';setPref('remindDays',o);sndClick()}
+    else if(r==='gdrive'){await gdDialog()}
     else{if(r==='update'){toast('Actualizando…',1500);forceUpdate()}break}}}};
 function formChanged(){const o=F.orig;if(!o)return true;const r=buildRecord();const k=['series','seriesNo','startDate','endDate','title','subtitle','synopsis','pubDate','publisher','isbn','language','notes','status','rating','priority','personalNote','coverUrl'];
   return k.some(x=>(r[x]||'')!==(o[x]||''))||authStr(r)!==authStr(o)||(r.genres||[]).join()!==(o.genres||[]).join()||r.coverBlob!==(o.coverBlob||null)||JSON.stringify(r.characters||[])!==JSON.stringify(o.characters||[])||JSON.stringify(r.formats||[])!==JSON.stringify(o.formats||[])}
@@ -1170,7 +1228,7 @@ document.addEventListener('change',e=>{const t=e.target;
     if(!getPref('firstUse',''))setPref('firstUse',String(Date.now()));
     if(!location.hash)history.replaceState(null,'','#/inicio');
     render();
-    autoSnap().catch(()=>{});setTimeout(()=>maybeRemind().catch(()=>{}),1500)}
+    autoSnap().catch(()=>{});setTimeout(()=>maybeRemind().catch(()=>{}),1500);setTimeout(()=>gdAuto().catch(()=>{}),2500)}
   catch(e){$('#main').innerHTML=`<div class="banner err"><b>No se pudo abrir el almacenamiento local.</b><br>${esc(e&&e.message||e)}<br>Es posible que estés en modo privado o que el navegador bloquee el almacenamiento.</div>`}
 })();
 </script>
