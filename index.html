@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e3ece1">
+<meta name="color-scheme" content="light dark">
+<script>try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap">
@@ -11,12 +13,38 @@
 <link rel="icon" href="icon.svg">
 <title>Mi biblioteca</title>
 <style>
-:root{--f:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--bg:#e3ece1;--card:#fff;--ink:#14261d;--muted:#3d5546;--accent:#2a3fd0;--accent-d:#1f2fa6;--line:#b9cdb7;--danger:#a63d2f;--ok:#2f6b3a}
+:root{--f:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--bg:#e3ece1;--card:#fff;--ink:#14261d;--muted:#3d5546;--accent:#2a3fd0;--accentbg:#2a3fd0;--soft:#d3e2d0;--field:#6f8a73;--toast:#14261d;--star:var(--star);--seg1:#2a3fd0;--seg2:#14261d;--seg3:#4d6354;color-scheme:light;--line:#b9cdb7;--danger:#a63d2f;--ok:#2f6b3a}
+:root[data-theme=dark]{--bg:#0e1913;--card:#17261d;--ink:#e4eee2;--muted:#a2b8a8;--accent:#9aa7ff;--accentbg:#3d4fdf;--line:#2d4336;--soft:#25392d;--field:#5b7a67;--toast:#2e4437;--star:#e0a64a;--seg1:#3d4fdf;--seg2:#3f6a52;--seg3:#5a6f62;--danger:#ff9a89;--ok:#7bd08a;color-scheme:dark;}
+:root[data-theme=dark] .banner{background:#3a3318;border-color:#6b5d25}
+:root[data-theme=dark] .banner.ok{background:#1f3a28;border-color:#2f5a3d}
+:root[data-theme=dark] .banner.err{background:#4a2420;border-color:#8a3f36}
+:root[data-theme=dark] .pill{background:#3a3318;color:#f0d98a}
+:root[data-theme=dark] .pill.ok{background:#1f3a28;color:#8fdba0}
+:root[data-theme=dark] .pr.alta{background:#4a2c1c;color:#f6c6a8}
+:root[data-theme=dark] .pr.media{background:#3d3512;color:#f0dc8a}
+:root[data-theme=dark] .pr.baja{background:#273320;color:#c3d6a8}
+:root[data-theme=dark] .dp{background:#22334a;color:#b9d2f2}
+:root[data-theme=dark] .card .r{color:#e0a64a}
+:root[data-theme=dark] .stars button.on{color:#e0a64a}
+:root[data-theme=dark] .cover{background:#2a3a31}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0e1913;--card:#17261d;--ink:#e4eee2;--muted:#a2b8a8;--accent:#9aa7ff;--accentbg:#3d4fdf;--line:#2d4336;--soft:#25392d;--field:#5b7a67;--toast:#2e4437;--star:#e0a64a;--seg1:#3d4fdf;--seg2:#3f6a52;--seg3:#5a6f62;--danger:#ff9a89;--ok:#7bd08a;color-scheme:dark;}
+:root:not([data-theme=light]) .banner{background:#3a3318;border-color:#6b5d25}
+:root:not([data-theme=light]) .banner.ok{background:#1f3a28;border-color:#2f5a3d}
+:root:not([data-theme=light]) .banner.err{background:#4a2420;border-color:#8a3f36}
+:root:not([data-theme=light]) .pill{background:#3a3318;color:#f0d98a}
+:root:not([data-theme=light]) .pill.ok{background:#1f3a28;color:#8fdba0}
+:root:not([data-theme=light]) .pr.alta{background:#4a2c1c;color:#f6c6a8}
+:root:not([data-theme=light]) .pr.media{background:#3d3512;color:#f0dc8a}
+:root:not([data-theme=light]) .pr.baja{background:#273320;color:#c3d6a8}
+:root:not([data-theme=light]) .dp{background:#22334a;color:#b9d2f2}
+:root:not([data-theme=light]) .card .r{color:#e0a64a}
+:root:not([data-theme=light]) .stars button.on{color:#e0a64a}
+:root:not([data-theme=light]) .cover{background:#2a3a31}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 var(--f)}
 h1,h2,h3,.serif{font-family:var(--f);font-weight:800;letter-spacing:-.02em}
 button{font:inherit;color:inherit;cursor:pointer}
-input,textarea,select{font:inherit;color:inherit;width:100%;padding:12px 14px;border:1.5px solid #6f8a73;border-radius:14px;background:var(--card);min-height:46px}
+input,textarea,select{font:inherit;color:inherit;width:100%;padding:12px 14px;border:1.5px solid var(--field);border-radius:14px;background:var(--card);min-height:46px}
 textarea{resize:vertical;min-height:96px}
 input:focus,textarea:focus,select:focus{outline:2px solid var(--accent);outline-offset:0}
 label{display:block;font-size:.85rem;color:var(--muted);margin:14px 0 4px}
@@ -25,35 +53,41 @@ header#top{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 16p
 .row{display:flex;gap:8px;align-items:center}
 .row>*{flex:0 0 auto}.grow{flex:1 1 auto!important;min-width:0}
 header h1{margin:0;font-size:1.95rem;line-height:1.1;letter-spacing:-.03em}
-.plus{width:48px;height:48px;border-radius:50%;border:0;background:var(--accent);color:#fff;font-size:1.9rem;line-height:1;box-shadow:0 2px 8px #0003}
+.plus{width:48px;height:48px;border-radius:50%;border:0;background:var(--accentbg);color:#fff;font-size:1.9rem;line-height:1;box-shadow:0 2px 8px #0003}
 .btn{min-height:46px;padding:0 18px;border-radius:23px;border:2px solid var(--ink);background:var(--card);font-weight:600}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accentbg);border-color:var(--accentbg);color:#fff}
 a.btn{color:var(--ink)}
 .btn.danger{color:var(--danger);border-color:var(--danger)}
 .btn.small{min-height:38px;padding:0 12px;font-size:.9rem}
 .btn.ghost{border-color:transparent;background:transparent;color:var(--accent)}
 .tools{display:flex;gap:8px;margin-top:8px}
 .tools select{flex:1}
-.badge{background:var(--accent);color:#fff;border-radius:20px;padding:0 7px;font-size:.75rem;margin-left:4px}
+.badge{background:var(--accentbg);color:#fff;border-radius:20px;padding:0 7px;font-size:.75rem;margin-left:4px}
 main{padding:14px 16px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:18px 14px}
 .card{background:none;border:0;padding:0;text-align:left;display:block;width:100%}
 .cover{aspect-ratio:2/3;width:100%;border-radius:6px 10px 10px 6px;overflow:hidden;box-shadow:0 3px 10px #0003;background:#ddd;position:relative}
 .cover img{width:100%;height:100%;object-fit:cover;display:block}
-.ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-family:var(--f);font-size:.9rem;font-weight:800;line-height:1.1;letter-spacing:-.01em;color:var(--ink)}
+.ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;font-family:var(--f);font-size:.9rem;font-weight:800;line-height:1.1;letter-spacing:-.01em;color:#14261d}
 .card .t{margin-top:8px;font-weight:600;font-size:.9rem;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .card .a{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card .r{font-size:.8rem;color:#c0892b;margin-top:2px}.card .r.none{color:var(--muted);font-style:normal}
 .tag{position:absolute;top:6px;left:6px;background:#14261dcc;color:#fff;font-size:.65rem;padding:1px 7px;border-radius:10px}
-.tag.alta{background:var(--danger)}.tag.media{background:#c0892b}.tag.baja{background:#6b7d8c}
+.tag.alta{background:var(--danger)}.tag.media{background:#c0892b}.tag.baja{background:#6b7d8c}.tag.loan{background:var(--accentbg,#2a3fd0)}
+.loanbox{margin-top:22px;padding:14px 16px 10px;border-radius:20px;background:var(--card);border:2px solid var(--ink)}
+.loanbox h2{margin:0 0 4px;font-size:1.1rem}
+.lrow{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;text-align:left;padding:6px 0;background:none;border:0;border-top:1px solid var(--line);border-radius:0;color:var(--ink);font:inherit}
+.lrow:first-of-type{border-top:0}.lrow b{flex:1;min-width:0}
+.ld{padding:2px 9px;border-radius:10px;background:var(--soft);font-size:.8rem;font-weight:800;white-space:nowrap}.ld.warn{background:var(--danger);color:#fff}
+.rd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:6px 0;border-top:1px solid var(--line)}.rd:first-of-type{border-top:0}.rd b{min-width:84px}
 .empty{text-align:center;padding:60px 20px;color:var(--muted)}
 .empty .big{font-size:3rem}
 nav#tabs{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:2px solid var(--ink);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:6}
 nav#tabs button{flex:1;border:0;background:none;padding:6px 2px;font-size:.7rem;color:var(--ink);font-weight:500;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 nav#tabs .pl{display:flex;align-items:center;justify-content:center;width:52px;height:30px;border-radius:15px}
-nav#tabs button.on .pl{background:var(--accent);color:#fff}
+nav#tabs button.on .pl{background:var(--accentbg);color:#fff}
 nav#tabs button.on{color:var(--ink);font-weight:800}
-.stars button{border:0;background:none;font-size:2rem;line-height:1;color:#d8cfbf;padding:2px 4px;min-width:44px;min-height:44px}
+.stars button{border:0;background:none;font-size:2rem;line-height:1;color:var(--line);padding:2px 4px;min-width:44px;min-height:44px}
 .stars button.on{color:#d49a2a}
 .stars.sm button{font-size:1.5rem;min-width:36px;min-height:36px}
 .detail .hero{display:flex;gap:16px;align-items:flex-start;margin-top:8px}
@@ -85,8 +119,9 @@ dt{color:var(--muted);font-size:.9rem}dd{margin:0}
 .res .info{flex:1;min-width:0}
 .res .info b{display:block;line-height:1.25}
 .banner{background:#fbf0d4;border:1px solid #e8d28f;border-radius:12px;padding:12px 14px;margin:14px 0}
+.banner.ok{background:#e6f0e3;border-color:#bcd5b6}
 .banner.err{background:#f8e0dc;border-color:#e2a79f}
-#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#14261d;color:#fff;padding:10px 18px;border-radius:24px;z-index:60;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center}
+#toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--toast);color:#fff;padding:10px 18px;border-radius:24px;z-index:60;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90%;text-align:center}
 #toast.show{opacity:1}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s .8s linear infinite;vertical-align:-3px;margin-right:6px}
 @keyframes s{to{transform:rotate(360deg)}}
@@ -105,13 +140,13 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .shelf{display:flex;gap:14px;overflow-x:auto;padding:10px 4px 14px}.shelf .card{flex:0 0 96px;width:96px}
 .panel{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-top:14px;color:var(--ink)}
 .panel h2{margin:0 0 8px;font-size:1.2rem}
-.hb{display:block;flex:1;height:12px;border-radius:6px;background:#d3e2d0;overflow:hidden}.hb i{display:block;height:100%;border-radius:6px;background:var(--accent)}
+.hb{display:block;flex:1;height:12px;border-radius:6px;background:var(--soft);overflow:hidden}.hb i{display:block;height:100%;border-radius:6px;background:var(--accent)}
 .brow{display:flex;align-items:center;gap:10px;margin-top:8px}.brow .nm{flex:0 0 104px;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.brow .v{flex:0 0 26px;text-align:right;font-weight:700}
 .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
-.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}.kpi b{display:block;font-family:var(--f);font-size:2rem;line-height:1;color:#2a3fd0}.kpi span{display:block;margin-top:6px;font-size:.75rem;line-height:1.25;color:#3d5546}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px}.kpi b{display:block;font-family:var(--f);font-size:2rem;line-height:1;color:var(--accent)}.kpi span{display:block;margin-top:6px;font-size:.75rem;line-height:1.25;color:var(--muted)}
 .fmt{display:flex;height:40px;border-radius:12px;overflow:hidden;font-size:.82rem;font-weight:700;color:#fff}.fmt div{display:flex;align-items:center;padding-left:12px;white-space:nowrap}
 .author{display:flex;align-items:center;gap:12px;min-height:52px;border-top:1px solid var(--line)}.author .av{flex:0 0 40px;height:40px;border-radius:50%;background:#d3e2d0;color:#2a3fd0;display:flex;align-items:center;justify-content:center;font-family:var(--f);font-weight:600}
-.qfeat{display:block;width:100%;text-align:left;border:0;background:#2a3fd0;color:#fff;border-radius:28px;padding:22px;margin-top:14px}
+.qfeat{display:block;width:100%;text-align:left;border:0;background:var(--accentbg);color:#fff;border-radius:28px;padding:22px;margin-top:14px}
 .qfeat p{font-weight:800;font-size:1.7rem;line-height:1.12;letter-spacing:-.02em;margin:8px 0 10px}
 .qfeat .top{display:flex;align-items:center;justify-content:space-between;font-size:.88rem;font-weight:600}
 .qfeat .shuf{width:44px;height:44px;margin:-10px -10px -10px 0;border:0;background:none;color:#fff;display:flex;align-items:center;justify-content:center}
@@ -120,16 +155,16 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .qc .qt{margin:0;font-weight:600;font-size:1.12rem;line-height:1.3;white-space:pre-wrap}
 .qf{margin-top:8px;border-top:1px solid var(--line);display:flex;align-items:center;gap:4px}
 .qb{flex:1;min-width:0;display:flex;align-items:center;gap:10px;border:0;background:none;text-align:left;padding:6px 0}
-.qb .mini{flex:0 0 28px;width:28px}.qb .qi{min-width:0}.qb .qi b{display:block;font-size:.85rem;line-height:1.25}.qb .qi span{display:block;font-size:.75rem;color:#3d5546}
-.ib{width:44px;height:44px;border:0;background:none;color:#3d5546;display:flex;align-items:center;justify-content:center}
+.qb .mini{flex:0 0 28px;width:28px}.qb .qi{min-width:0}.qb .qi b{display:block;font-size:.85rem;line-height:1.25}.qb .qi span{display:block;font-size:.75rem;color:var(--muted)}
+.ib{width:44px;height:44px;border:0;background:none;color:var(--muted);display:flex;align-items:center;justify-content:center}
 .wc{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px}
 .wmain{display:flex!important;gap:12px;align-items:flex-start}.wcv{flex:0 0 64px;width:64px}.wi{flex:1;min-width:0}.wi>*{display:block}.wi .t{margin-top:0;font-family:var(--f);font-size:1.1rem;display:-webkit-box}
 .pr{display:inline-block!important;margin-top:8px;padding:2px 10px;border-radius:10px;font-size:.75rem;font-weight:700}.pr.alta{background:#f3dccb;color:#7a3a12}.pr.media{background:#f4e8c0;color:#6b5410}.pr.baja{background:#e8ebe0;color:#4a5a30}
-.wn{margin-top:8px;font-size:.82rem;font-style:normal;color:#3d5546}
+.wn{margin-top:8px;font-size:.82rem;font-style:normal;color:var(--muted)}
 .wf{margin-top:8px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;padding-top:6px}
-.tl{position:relative;padding-left:30px}.tl:before{content:"";position:absolute;left:7px;top:0;bottom:0;width:2px;background:#b9cdb7}
-.tl .mo{position:relative;padding:4px 0 10px}.tl .mo:before{content:"";position:absolute;left:-30px;top:9px;width:16px;height:16px;border-radius:50%;background:#2a3fd0;border:3px solid var(--bg);box-sizing:content-box;margin-left:-3px;margin-top:-3px}
-.tl .mo h2{display:inline;font-size:1.3rem}.tl .mo span{margin-left:8px;font-size:.8rem;color:#3d5546}
+.tl{position:relative;padding-left:30px}.tl:before{content:"";position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--line)}
+.tl .mo{position:relative;padding:4px 0 10px}.tl .mo:before{content:"";position:absolute;left:-30px;top:9px;width:16px;height:16px;border-radius:50%;background:var(--accentbg);border:3px solid var(--bg);box-sizing:content-box;margin-left:-3px;margin-top:-3px}
+.tl .mo h2{display:inline;font-size:1.3rem}.tl .mo span{margin-left:8px;font-size:.8rem;color:var(--muted)}
 .tlc{display:flex!important;gap:12px;background:var(--card);border:1px solid var(--line)!important;border-radius:16px;padding:12px!important;margin-bottom:12px}
 .tlc .cv{flex:0 0 48px;width:48px}.tlc .in{flex:1;min-width:0}.tlc .in b{display:block;font-family:var(--f);font-size:1.05rem;line-height:1.2}
 .dp{display:inline-block;padding:2px 9px;border-radius:10px;background:#dde5ee;color:#2f4560;font-size:.75rem;font-weight:700}
@@ -142,17 +177,17 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke
 @media(prefers-reduced-motion:reduce){.cf{scroll-behavior:auto}}
 .hcap{margin-top:10px;align-items:center}.hname{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.15}
 .hpills{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-.hpill{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;border-radius:24px;background:#fff;border:2px solid var(--ink);font-weight:600;color:var(--ink)}
-.hpill b{padding:1px 8px;border-radius:10px;background:#d3e2d0;font-size:.8rem;font-weight:800}
+.hpill{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;border-radius:24px;background:var(--card);border:2px solid var(--ink);font-weight:600;color:var(--ink)}
+.hpill b{padding:1px 8px;border-radius:10px;background:var(--soft);font-size:.8rem;font-weight:800}
 .goalbtn{display:block;width:100%;text-align:left;border:0;background:none;padding:0;margin-top:30px;color:var(--ink)}
 .gnum{display:flex;align-items:flex-end;gap:10px;margin-top:2px}.gnum b{font-size:6.5rem;line-height:.85;letter-spacing:-.06em;color:var(--accent);font-weight:800}.gnum span{padding-bottom:6px;font-size:1.35rem;font-weight:600;line-height:1.1}
-.gbars{display:flex;align-items:flex-end;gap:3px;height:34px;margin-top:14px}.gbars i{flex:1;border-radius:3px;background:#b9cdb7}.gbars i.on{background:var(--accent)}
+.gbars{display:flex;align-items:flex-end;gap:3px;height:34px;margin-top:14px}.gbars i{flex:1;border-radius:3px;background:var(--line)}.gbars i.on{background:var(--accent)}
 .gh{font-size:1.3rem;font-weight:800;display:block}
 .scard{display:flex;gap:14px;align-items:center;cursor:pointer}.sfan{flex:0 0 96px;width:96px;height:78px;position:relative}.sfan .sc{position:absolute;top:0;width:48px}.sfan .sc:nth-child(1){left:0;z-index:3}.sfan .sc:nth-child(2){left:22px;top:6px;z-index:2;transform:rotate(5deg)}.sfan .sc:nth-child(3){left:44px;top:12px;z-index:1;transform:rotate(10deg)}
 .sc .ph,.srow .ph,.qb .ph,.tlc .ph{font-size:.58rem;padding:3px;overflow:hidden}
 .sinfo{flex:1;min-width:0}.sinfo b{font-size:1.1rem;letter-spacing:-.02em;line-height:1.2;display:block}
-.srow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;margin-top:10px;flex-wrap:wrap}.srow .wmain{flex:1;min-width:0}.srow.miss{background:none;border:2px dashed #6f8a73;min-height:56px}
-.sn{flex:0 0 32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}.srow.miss .sn{background:none;color:var(--ink);border:2px solid var(--ink)}
+.srow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;margin-top:10px;flex-wrap:wrap}.srow .wmain{flex:1;min-width:0}.srow.miss{background:none;border:2px dashed var(--field);min-height:56px}
+.sn{flex:0 0 32px;height:32px;border-radius:50%;background:var(--accentbg);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}.srow.miss .sn{background:none;color:var(--ink);border:2px solid var(--ink)}
 @media print{nav,header,.plus{display:none}}
 </style>
 </head>
@@ -182,7 +217,7 @@ const hue=s=>{let h=0;for(const c of s||'')h=(h*31+c.charCodeAt(0))%360;return h
 const cleanIsbn=s=>(s||'').replace(/[^0-9Xx]/g,'').toUpperCase();
 const PRIO={alta:3,media:2,baja:1};
 const LANGS={spa:'Español',es:'Español',eng:'Inglés',en:'Inglés',fre:'Francés',fra:'Francés',fr:'Francés',ger:'Alemán',deu:'Alemán',de:'Alemán',ita:'Italiano',it:'Italiano',por:'Portugués',pt:'Portugués',cat:'Catalán',ca:'Catalán',glg:'Gallego',gl:'Gallego',eus:'Euskera',baq:'Euskera',eu:'Euskera'};
-const APP_VERSION='14 · colecciones';
+const APP_VERSION='16 · ISBN, prestados, relecturas, tarjeta';
 const IC={home:'m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10',book:'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20',mark:'m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z',
   quote:'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zM15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
   chart:'M3 3v16a2 2 0 0 0 2 2h16M18 17V9M13 17V5M8 17v-3',clock:'M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',cal:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
@@ -195,6 +230,12 @@ async function forceUpdate(){ // borra solo la caché de la app; los libros (Ind
     if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch{}
   reloadPage()}
 /* ---- sonidos (sintetizados, sin archivos; se pueden desactivar en 💾) ---- */
+const THEME_LBL={auto:'automático',dark:'oscuro',light:'claro'};
+function applyTheme(){let t='auto';try{t=localStorage.getItem('theme')||'auto'}catch{}const r=document.documentElement;
+  if(t==='dark'||t==='light')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');
+  const dark=t==='dark'||(t==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.setAttribute('content',dark?'#0e1913':'#e3ece1')}
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',applyTheme)}catch{}
 let AC=null;
 const soundOn=()=>getPref('sound','on')!=='off';
 function audio(){try{if(!AC){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;AC=new C()}if(AC.state==='suspended')AC.resume();return AC}catch{return null}}
@@ -209,8 +250,10 @@ function toast(m,ms=2600){const t=$('#toast');t.textContent=m;t.classList.add('s
 
 /* ======================= Base de datos (IndexedDB) ======================= */
 let db;
-function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('mi-biblioteca',1);
-  r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('books',{keyPath:'id'});d.createObjectStore('quotes',{keyPath:'id'}).createIndex('bookId','bookId');d.createObjectStore('wishlist',{keyPath:'id'});d.createObjectStore('drafts',{keyPath:'key'})};
+function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open('mi-biblioteca',2);
+  r.onupgradeneeded=()=>{const d=r.result,has=n=>d.objectStoreNames.contains(n);
+    if(!has('books'))d.createObjectStore('books',{keyPath:'id'});if(!has('quotes'))d.createObjectStore('quotes',{keyPath:'id'}).createIndex('bookId','bookId');
+    if(!has('wishlist'))d.createObjectStore('wishlist',{keyPath:'id'});if(!has('drafts'))d.createObjectStore('drafts',{keyPath:'key'});if(!has('snaps'))d.createObjectStore('snaps',{keyPath:'id'})};
   r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
 const rp=r=>new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
 const getAll=s=>rp(db.transaction(s).objectStore(s).getAll());
@@ -246,9 +289,9 @@ async function remoteCover(url){ // intenta descargar la portada; null si la fue
   try{const r=await fetchT(url);if(!r.ok)return null;const b=await r.blob();if(!b.type.startsWith('image/')||b.size<2000)return null;return b}catch{return null}}
 
 /* ======================= Búsqueda bibliográfica (Open Library + Google Books) ======================= */
-async function searchOL(title,author){
+async function searchOL(title,author,isbn){
   const p=new URLSearchParams({limit:'10',fields:'key,title,subtitle,author_name,first_publish_year,publisher,isbn,cover_i,cover_edition_key,language,subject'});
-  if(title)p.set('title',title);if(author)p.set('author',author);
+  if(title)p.set('title',title);if(author)p.set('author',author);if(isbn)p.set('isbn',isbn);
   const r=await fetchT('https://openlibrary.org/search.json?'+p);if(!r.ok)throw new Error('Open Library respondió '+r.status);
   let j=await r.json();
   if(!(j.docs||[]).length&&title){const p2=new URLSearchParams({limit:'10',q:[title,author].filter(Boolean).join(' '),fields:p.get('fields')});const r2=await fetchT('https://openlibrary.org/search.json?'+p2);if(r2.ok)j=await r2.json()}
@@ -283,9 +326,9 @@ async function searchApple(title,author){
   return (j.results||[]).filter(x=>x.trackName).map(x=>{const cov=(x.artworkUrl100||'').replace('100x100bb','600x600bb');
     return {src:'Apple Books',ap:{synopsis:stripHtml(x.description)},title:x.trackName,subtitle:'',authors:x.artistName?x.artistName.split(/\s*(?:,| y | & )\s*/).filter(Boolean):[],year:(x.releaseDate||'').slice(0,4),
       publisher:'',isbn:'',cover:cov,thumb:(x.artworkUrl100||cov),subjects:(x.genres||[]).filter(g=>!/^(books|libros)$/i.test(g)).slice(0,4)}})}
-async function searchGB(title,author){
-  let items=await gbQuery('intitle:'+title+(author?' inauthor:'+author:''));
-  if(!items.length)items=await gbQuery(title+(author?' '+author:'')); // búsqueda libre si la estructurada no da nada
+async function searchGB(title,author,isbn){
+  let items=await gbQuery(isbn?'isbn:'+isbn:'intitle:'+title+(author?' inauthor:'+author:''));
+  if(!items.length&&!isbn)items=await gbQuery(title+(author?' '+author:'')); // búsqueda libre si la estructurada no da nada
   const seen=new Set();
   return items.map(it=>{const v=it.volumeInfo||{};const img=(v.imageLinks||{}).thumbnail||(v.imageLinks||{}).smallThumbnail||'';
     const u=img.replace('http://','https://').replace('&edge=curl','');
@@ -370,7 +413,7 @@ function renderGrid(){
   const L=libFiltered(),g=$('#grid');if(!g)return;
   if(!S.books.length){g.innerHTML=`<div class="empty"><div class="big">📖</div><h2>Tu biblioteca está vacía</h2><p>Pulsa el botón <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p><button class="btn primary" data-act="new-book">Añadir un libro</button></div>`;return}
   if(!L.length){g.innerHTML=`<div class="empty"><p>Ningún libro coincide con la búsqueda o los filtros.</p><button class="btn" data-act="clear-f">Quitar filtros</button></div>`;return}
-  g.innerHTML=`<div class="grid">${L.map(b=>`<button class="card" data-act="open-book" data-id="${b.id}">${coverHTML(b,b.status==='pendiente'?'<span class="tag">Pendiente</span>':'')}
+  g.innerHTML=`<div class="grid">${L.map(b=>`<button class="card" data-act="open-book" data-id="${b.id}">${coverHTML(b,b.loan?'<span class="tag loan">Prestado</span>':b.status==='pendiente'?'<span class="tag">Pendiente</span>':'')}
    <div class="t">${esc(b.title)}</div><div class="a">${esc(authStr(b))||'&nbsp;'}</div>${b.series?`<div class="a" style="color:var(--accent);font-weight:600">${esc(seriesOf(b))}</div>`:''}
    ${b.rating?`<div class="r" aria-label="${b.rating} de 5">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>`:'<div class="r none">Sin valorar</div>'}</button>`).join('')}</div>`}
 
@@ -424,7 +467,9 @@ function renderHome(){
   let qod='';
   if(S.quotes.length){const q=S.quotes[Math.floor(Date.now()/864e5)%S.quotes.length],b=S.books.find(x=>x.id===q.bookId);
     qod=`<div style="margin-top:28px"><button class="qfeat" data-act="go" data-h="#/citas"><span class="top"><span>Cita del día</span></span><p>“${esc(q.text)}”</p><span class="small">${esc(b?b.title:'')}${q.page?' · pág. '+esc(q.page):''}</span></button></div>`}
-  $('#main').innerHTML=warn+hero+(S.books.length?'':'<p class="muted" style="margin:16px 0;text-align:center">Pulsa <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p>')+pills+goal+qod;
+  const loaned=S.books.filter(b=>b.loan).sort((a,b)=>a.loan.since.localeCompare(b.loan.since)),ld=b=>Math.max(0,dayDiff(b.loan.since,today()));
+  const loanBox=loaned.length?`<div class="loanbox"><h2 class="serif">Prestados</h2>${loaned.map(b=>`<button class="lrow" data-act="open-book" data-id="${b.id}"><b>${esc(b.title)}</b><span class="small muted">${esc(b.loan.to)}</span><span class="ld${ld(b)>=30?' warn':''}">${ld(b)===0?'Hoy':plural(ld(b),'día','días')}</span></button>`).join('')}${loaned.some(b=>ld(b)>=30)?'<p class="small" style="margin:6px 0 4px">Los marcados en rojo llevan 30 días o más fuera: quizá toque pedirlos de vuelta.</p>':''}</div>`:'';
+  $('#main').innerHTML=warn+hero+(S.books.length?'':'<p class="muted" style="margin:16px 0;text-align:center">Pulsa <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p>')+pills+loanBox+goal+qod;
   if(pool.length)initCarousel(pool)}
 
 /* ---------- Colecciones (trilogías, sagas, series) ---------- */
@@ -501,7 +546,7 @@ function refreshQ(){if(route.name==='book')renderBook(route.id);else if(route.na
 const statYears=()=>[...new Set(readBooks().map(yearOf).filter(Boolean))].sort().reverse();
 function barsSVG(vals,labs,aria){const n=vals.length,W=318,base=118,mx=Math.max(1,...vals),unit=Math.min(46,88/mx),slot=W/n,bw=Math.min(18,slot-6);
   return `<svg viewBox="0 0 318 150" width="100%" role="img" aria-label="${esc(aria)}" style="display:block">${vals.map((v,i)=>{const h=v?v*unit:2,cx=slot*i+slot/2;
-    return `<rect x="${(cx-bw/2).toFixed(1)}" y="${(base-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="4" fill="${v?'#2a3fd0':'#b9cdb7'}"/>${v?`<text x="${cx.toFixed(1)}" y="${(base-h-6).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="700" fill="#14261d">${v}</text>`:''}<text x="${cx.toFixed(1)}" y="140" text-anchor="middle" font-size="11" fill="#3d5546">${labs[i]}</text>`}).join('')}</svg>`}
+    return `<rect x="${(cx-bw/2).toFixed(1)}" y="${(base-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="4" style="fill:${v?'var(--accent)':'var(--line)'}"/>${v?`<text x="${cx.toFixed(1)}" y="${(base-h-6).toFixed(1)}" text-anchor="middle" font-size="12" font-weight="700" style="fill:var(--ink)">${v}</text>`:''}<text x="${cx.toFixed(1)}" y="140" text-anchor="middle" font-size="11" style="fill:var(--muted)">${labs[i]}</text>`}).join('')}</svg>`}
 function hbRows(items,color){const mx=Math.max(1,...items.map(i=>i[1]));return items.map(([n,v])=>`<div class="brow"><span class="nm">${esc(n)}</span><span class="hb"><i style="width:${Math.round(v/mx*100)}%${color?';background:'+color:''}"></i></span><span class="v">${v}</span></div>`).join('')}
 const topCount=(arr,n)=>{const m=new Map();arr.forEach(x=>m.set(x,(m.get(x)||0)+1));return [...m].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'es')).slice(0,n)};
 function renderStats(){
@@ -510,6 +555,7 @@ function renderStats(){
   const sy=S.sy,B=readBooks().filter(b=>sy==='all'||yearOf(b)===sy);
   $('#top').innerHTML=`<div class="row"><h1 class="grow">Estadísticas</h1>${BTN_BACKUP}</div><div class="chips">${yrs.map(y=>`<button class="chip ${sy===y?'on':''}" data-act="syear" data-v="${y}">${y}</button>`).join('')}<button class="chip ${sy==='all'?'on':''}" data-act="syear" data-v="all">Total</button></div>`;
   if(!B.length){$('#main').innerHTML=`<div class="empty"><div class="big">📊</div><h2>Aún no hay datos</h2><p>Las estadísticas se calculan con los libros que marques como <b>Leído</b>${sy==='all'?'':' en '+sy}. Añade las fechas de lectura para ver el gráfico por meses.</p></div>`;return}
+  const rrN=readBooks().reduce((a,b)=>a+(b.rereads||[]).filter(r=>{const d=r.end||r.start||'';return sy==='all'||d.slice(0,4)===sy}).length,0);
   const rated=B.filter(b=>b.rating),avg=rated.length?num((rated.reduce((a,b)=>a+b.rating,0)/rated.length).toFixed(1)):'–';
   const spans=B.filter(b=>b.startDate&&b.endDate&&b.endDate>=b.startDate).map(b=>dayDiff(b.startDate,b.endDate)),avgD=spans.length?Math.round(spans.reduce((a,b)=>a+b,0)/spans.length):'–';
   let vals,labs,title,aria,noDate=0;
@@ -517,9 +563,10 @@ function renderStats(){
   else{vals=Array(12).fill(0);B.forEach(b=>{const d=b.endDate||b.startDate;if(d&&d.slice(0,4)===sy)vals[+d.slice(5,7)-1]++;else noDate++});labs='EFMAMJJASOND'.split('');title='Libros por mes';aria='Libros leídos por mes en '+sy+': '+vals.map((v,i)=>MES[i]+' '+v).join(', ')}
   const genres=topCount(B.flatMap(b=>b.genres||[]),5),authors=topCount(B.flatMap(b=>b.authors||[]),4);
   const fis=B.filter(b=>(b.formats||[]).includes('fisico')).length,ele=B.filter(b=>(b.formats||[]).includes('electronico')).length,sin=B.filter(b=>!(b.formats||[]).length).length;
-  const seg=[['Físico',fis,'#2a3fd0'],['Electrónico',ele,'#14261d'],['Sin indicar',sin,'#4d6354']].filter(x=>x[1]);
+  const seg=[['Físico',fis,'var(--seg1)'],['Electrónico',ele,'var(--seg2)'],['Sin indicar',sin,'var(--seg3)']].filter(x=>x[1]);
   const rc=[5,4,3,2,1].map(n=>[n+' ★',B.filter(b=>b.rating===n).length]);
   $('#main').innerHTML=`<div class="kpis"><div class="kpi"><b>${B.length}</b><span>libros leídos${sy==='all'?' en total':' en '+sy}</span></div><div class="kpi"><b>${avg}</b><span>valoración media de 5</span></div><div class="kpi"><b>${avgD}</b><span>días de media por libro</span></div></div>
+   ${rrN?`<p class="muted small" style="margin:-4px 0 12px">Además, ${plural(rrN,'relectura','relecturas')}${sy==='all'?'':' en '+sy}.</p>`:''}
    <div class="panel"><h2 class="serif">${title}</h2>${barsSVG(vals,labs,aria)}${noDate?`<div class="muted small">${plural(noDate,'libro sin fecha de lectura no aparece','libros sin fecha de lectura no aparecen')} en el gráfico.</div>`:''}</div>
    <div class="panel"><h2 class="serif">Géneros</h2>${genres.length?hbRows(genres):'<p class="muted small" style="margin:0">Sin géneros indicados.</p>'}</div>
    <div class="panel"><h2 class="serif">Autores más leídos</h2>${authors.length?authors.map(([a,n])=>`<div class="author"><span class="av">${esc(a.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase())}</span><span class="grow" style="font-weight:600">${esc(a)}</span><span class="muted small">${plural(n,'libro','libros')}</span></div>`).join(''):'<p class="muted small" style="margin:0">Sin autores.</p>'}</div>
@@ -528,7 +575,7 @@ function renderStats(){
 
 /* ---------- Cronología ---------- */
 function renderTimeline(){
-  const R=readBooks(),key=b=>b.endDate||b.startDate,D=R.filter(key),noD=R.length-D.length;
+  const R=readBooks().flatMap(b=>[{...b,_n:0},...(b.rereads||[]).map((r,i)=>({...b,_n:i+1,startDate:r.start||'',endDate:r.end||''}))]),key=b=>b.endDate||b.startDate,D=R.filter(key),noD=R.filter(b=>!key(b)&&!b._n).length;
   const yrs=[...new Set(D.map(b=>key(b).slice(0,4)))].sort().reverse();
   if(S.ty===null||(S.ty!=='all'&&!yrs.includes(S.ty)))S.ty=yrs[0]||'all';
   $('#top').innerHTML=`<div class="row"><button class="btn ghost" data-act="go" data-h="#/inicio">← Inicio</button><span class="grow"></span>${BTN_BACKUP}</div><h1 style="margin-top:4px">Cronología</h1><div class="muted small">Cuándo empezaste y terminaste cada libro.</div>
@@ -539,10 +586,88 @@ function renderTimeline(){
   const card=b=>{const range=b.startDate&&b.endDate?`${shortDay(b.startDate)} → ${shortDay(b.endDate)}`:b.endDate?`Terminado el ${shortDay(b.endDate)}`:`Empezado el ${shortDay(b.startDate)}`;
     const dd=b.startDate&&b.endDate&&b.endDate>=b.startDate?dayDiff(b.startDate,b.endDate):null;
     const fm=(b.formats||[]).map(f=>f==='fisico'?'Físico':'Electrónico').join(' + ');
-    return `<button class="card tlc" data-act="open-book" data-id="${b.id}"><span class="cv">${coverHTML(b)}</span><span class="in"><b>${esc(b.title)}</b><span class="a" style="display:block">${esc(authStr(b))}</span><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><span class="small" style="font-weight:600">${range}</span>${dd!==null?`<span class="dp">${dd===0?'Mismo día':plural(dd,'día','días')}</span>`:''}</span>${fm||b.rating?`<span class="small muted" style="display:block;margin-top:4px">${esc(fm)}${fm&&b.rating?' · ':''}${b.rating?`<span style="color:#8a5a10" aria-label="${b.rating} de 5">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</span>`:''}</span>`:''}</span></button>`};
+    return `<button class="card tlc" data-act="open-book" data-id="${b.id}"><span class="cv">${coverHTML(b)}</span><span class="in"><b>${esc(b.title)}</b>${b._n?' <span class="dp">↻ Relectura</span>':''}<span class="a" style="display:block">${esc(authStr(b))}</span><span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px"><span class="small" style="font-weight:600">${range}</span>${dd!==null?`<span class="dp">${dd===0?'Mismo día':plural(dd,'día','días')}</span>`:''}</span>${fm||b.rating?`<span class="small muted" style="display:block;margin-top:4px">${esc(fm)}${fm&&b.rating?' · ':''}${b.rating?`<span style="color:var(--star)" aria-label="${b.rating} de 5">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</span>`:''}</span>`:''}</span></button>`};
   $('#main').innerHTML=`<div class="tl">${groups.map(g=>{const [y,m]=g.k.split('-').map(Number),nm=new Date(y,m-1,1).toLocaleDateString('es-ES',{month:'long'});
     return `<div class="mo"><h2 class="serif">${nm[0].toUpperCase()+nm.slice(1)} ${y}</h2><span>${plural(g.b.length,'libro','libros')}</span></div>${g.b.map(card).join('')}`}).join('')}</div>`
    +(noD?`<p class="muted small">${plural(noD,'libro leído no tiene','libros leídos no tienen')} fecha de lectura y no aparece${noD===1?'':'n'} aquí. Puedes añadirla al editar el libro.</p>`:'')}
+
+/* ---------- Préstamos, relecturas, tarjeta y escáner ISBN ---------- */
+const ordLect=n=>n+'.ª lectura';
+function loanSec(b){const l=b.loan,h=b.loanHistory||[],d=l?Math.max(0,dayDiff(l.since,today())):0;
+  return `<section><h3>Préstamo</h3>${l?`<p style="margin:0">Prestado a <b>${esc(l.to)}</b> desde el ${fmtDay(l.since)} (${d===0?'hoy':plural(d,'día','días')}).${l.note?`<br><span class="small muted">${esc(l.note)}</span>`:''}</p><button class="btn small primary" style="margin-top:8px" data-act="loan-return" data-id="${b.id}">Ya me lo han devuelto</button>`:`<button class="btn small" data-act="loan-new" data-id="${b.id}">Prestar este libro</button>`}${h.length?`<div class="small muted" style="margin-top:10px">Préstamos anteriores:${h.slice().reverse().map(x=>`<br>${esc(x.to)} · ${fmtDay(x.since)} → ${fmtDay(x.returned)}`).join('')}</div>`:''}</section>`}
+function readsSec(b){const rr=b.rereads||[],rng=(a,e)=>a&&e?`${fmtDay(a)} → ${fmtDay(e)}`:e?`Terminada el ${fmtDay(e)}`:a?`Empezada el ${fmtDay(a)}`:'Sin fechas';
+  return `<section><h3>Lecturas</h3><div class="rd"><b>${ordLect(1)}</b><span class="small">${rng(b.startDate,b.endDate)}</span></div>${rr.map((r,i)=>`<div class="rd"><b>${ordLect(i+2)}</b><span class="small">${rng(r.start,r.end)}</span><button class="btn small ghost" style="color:var(--danger)" data-act="reread-del" data-id="${b.id}" data-i="${i}">Quitar</button></div>`).join('')}<button class="btn small" style="margin-top:8px" data-act="reread-add" data-id="${b.id}">+ Registrar otra lectura</button></section>`}
+async function patchBook(id,fn){const b=S.books.find(x=>x.id===id);if(!b)return;const n=fn({...b});n.updatedAt=new Date().toISOString();await tx('books',t=>t.objectStore('books').put(n));await reload();render()}
+
+function isbnOK(v){v=cleanIsbn(v);
+  if(v.length===13&&/^97[89]/.test(v)){let t=0;for(let i=0;i<12;i++)t+=(+v[i])*(i%2?3:1);return (10-t%10)%10===+v[12]}
+  if(v.length===10&&/^\d{9}[\dX]$/.test(v)){let t=0;for(let i=0;i<9;i++)t+=(+v[i])*(10-i);t+=v[9]==='X'?10:+v[9];return t%11===0}
+  return false}
+function scanDialog(){return new Promise(res=>{
+  const hasBD='BarcodeDetector' in window&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia;
+  const m=document.createElement('div');m.className='modal';
+  m.innerHTML=`<div class="box" role="dialog" aria-modal="true"><h3>Escanear ISBN</h3>${hasBD?'<video id="scv" playsinline muted style="width:100%;border-radius:12px;background:#000;max-height:260px;object-fit:cover"></video><p class="small muted" id="scm" style="margin:6px 0">Apunta al código de barras de la contraportada (empieza por 978 o 979).</p>':'<p class="small muted" id="scm" style="margin:0 0 8px">Este navegador no puede leer códigos de barras con la cámara. Escribe el ISBN: 13 cifras, suele estar impreso sobre el código de barras.</p>'}<label for="scn">O escribe el ISBN</label><input id="scn" inputmode="numeric" autocomplete="off" placeholder="978…"><p class="small" id="sce" style="color:var(--danger);margin:6px 0 0"></p><div class="acts"><button class="btn primary" data-i="ok">Buscar este ISBN</button><button class="btn" data-i="x">Cancelar</button></div></div>`;
+  document.body.appendChild(m);
+  let stream=null,alive=true,timer;
+  const done=v=>{if(!alive)return;alive=false;clearTimeout(timer);if(stream)stream.getTracks().forEach(t=>t.stop());m.remove();res(v)};
+  m.addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(!b)return;
+    if(b.dataset.i==='x')return done(null);
+    const v=cleanIsbn($('#scn',m).value);if(!isbnOK(v)){$('#sce',m).textContent='Ese ISBN no parece válido. Revisa las cifras.';return}done(v)});
+  if(hasBD)(async()=>{try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    if(!alive){stream.getTracks().forEach(t=>t.stop());return}
+    const v=$('#scv',m);v.srcObject=stream;await v.play();const det=new BarcodeDetector({formats:['ean_13','ean_8']});
+    const tick=async()=>{if(!alive)return;try{const r=await det.detect(v);const hit=r.map(x=>cleanIsbn(x.rawValue)).find(isbnOK);if(hit){sndTick();return done(hit)}}catch{}timer=setTimeout(tick,250)};tick()}
+   catch(err){const e=$('#scm',m);if(e)e.textContent='No se pudo abrir la cámara ('+(err&&err.name==='NotAllowedError'?'permiso denegado':'no disponible')+'). Escribe el ISBN a mano.'}})()})}
+async function scanFlow(){
+  collect();const code=await scanDialog();if(!code)return;
+  F.isbn=code;F.edited.delete('isbn');F.searching=true;F.results=null;F.errs=[];renderForm();
+  const out=await Promise.allSettled([searchOL('','',code),searchGB('','',code)]);
+  const ok=[];out.forEach(o=>{if(o.status==='fulfilled')ok.push(...o.value.filter(r=>r.title))});
+  ok.sort((a,b)=>(b.cover?1:0)-(a.cover?1:0));
+  if(!ok.length){F.searching=false;F.errs=[navigator.onLine?`No se encontró el ISBN ${code}. Se ha puesto en su campo; completa el resto a mano.`:'Sin conexión: el ISBN queda guardado en su campo. Completa el resto cuando tengas Internet.'];renderForm();return}
+  await applyResult(ok[0],false);F.isbn=code;renderForm();toast('Libro encontrado ✓ Revisa los datos',3200)}
+
+async function loadCoverImg(b){let blob=b.coverBlob||null;if(!blob&&b.coverUrl)blob=await remoteCover(b.coverUrl);if(!blob)return null;
+  try{const url=URL.createObjectURL(blob),im=new Image();await new Promise((ok,ko)=>{im.onload=ok;im.onerror=ko;im.src=url});return im}catch{return null}}
+function wrapText(c,t,x,y,w,lh,maxLines){const words=String(t).split(/\s+/);let line='',lines=[];
+  for(const w0 of words){const test=line?line+' '+w0:w0;if(c.measureText(test).width>w&&line){lines.push(line);line=w0}else line=test}
+  if(line)lines.push(line);if(lines.length>maxLines){lines=lines.slice(0,maxLines);lines[maxLines-1]=lines[maxLines-1].replace(/[ ,.;:]*$/,'')+'…'}
+  lines.forEach((l,i)=>c.fillText(l,x,y+i*lh));return y+lines.length*lh}
+async function makeCard(b,q){
+  try{await document.fonts.load('800 60px "Bricolage Grotesque"')}catch{}
+  const W=1080,H=1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d'),FF='"Bricolage Grotesque",system-ui,sans-serif';
+  c.fillStyle='#e3ece1';c.fillRect(0,0,W,H);
+  const cw=300,ch=450,cx=(W-cw)/2,cy=70,im=await loadCoverImg(b);
+  c.save();c.shadowColor='rgba(20,38,29,.35)';c.shadowBlur=40;c.shadowOffsetY=18;
+  if(im){const sc=Math.min(cw/im.width,ch/im.height),dw=im.width*sc,dh=im.height*sc;c.drawImage(im,(W-dw)/2,cy+(ch-dh)/2,dw,dh)}
+  else{c.fillStyle=`hsl(${hue(b.title)},28%,78%)`;c.fillRect(cx,cy,cw,ch)}
+  c.restore();
+  c.textAlign='center';
+  if(!im){c.fillStyle='#14261d';c.font=`800 44px ${FF}`;wrapText(c,b.title,W/2,cy+ch/2-30,cw-60,54,5)}
+  let y=cy+ch+100;
+  c.fillStyle='#14261d';c.font=`800 62px ${FF}`;y=wrapText(c,b.title,W/2,y,900,70,2);
+  const au=authStr(b);if(au){c.fillStyle='#3d5546';c.font=`600 36px ${FF}`;y=wrapText(c,au,W/2,y+6,900,44,1)}
+  if(b.rating){c.fillStyle='#a8741a';c.font=`700 54px ${FF}`;c.fillText('★'.repeat(b.rating)+'☆'.repeat(5-b.rating),W/2,y+66);y+=66}
+  if(q){y+=70;const bx=70,bw=W-140,bt=y-20,bh=H-120-bt;c.fillStyle='#2a3fd0';
+    if(c.roundRect){c.beginPath();c.roundRect(bx,bt,bw,bh,36);c.fill()}else c.fillRect(bx,bt,bw,bh);
+    c.fillStyle='#fff';c.textAlign='left';c.font=`800 40px ${FF}`;const e=wrapText(c,'“'+q.text.trim()+'”',bx+44,bt+70,bw-88,52,Math.max(2,Math.floor((bh-110)/52)));
+    if(q.page){c.font=`600 28px ${FF}`;c.globalAlpha=.85;c.fillText('pág. '+q.page,bx+44,Math.min(e+14,bt+bh-24));c.globalAlpha=1}c.textAlign='center'}
+  c.fillStyle='#3d5546';c.font=`700 30px ${FF}`;c.fillText('Mi biblioteca',W/2,H-52);
+  return await new Promise(r=>cv.toBlob(r,'image/png'))}
+async function shareCard(id){
+  const b=S.books.find(x=>x.id===id);if(!b)return;const qs=S.quotes.filter(q=>q.bookId===id);let q=null;
+  if(qs.length){const r=await dialog('Tarjeta para compartir',`<label for="cq2">Cita para la tarjeta</label><select id="cq2"><option value="">Sin cita</option>${qs.map((x,i)=>`<option value="${i}" ${i===0?'selected':''}>${esc(x.text.slice(0,70))}</option>`).join('')}</select>`,[{label:'Crear tarjeta',cls:'primary',get:m=>({i:$('#cq2',m).value})},{label:'Cancelar',val:null}]);
+    if(!r)return;q=r.i===''?null:qs[+r.i]}
+  toast('Creando tarjeta…',1500);
+  const blob=await makeCard(b,q);if(!blob){toast('No se pudo crear la imagen.');return}
+  const url=URL.createObjectURL(blob),name=(norm(b.title).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'libro')+'.png',file=new File([blob],name,{type:'image/png'});
+  const can=!!(navigator.canShare&&navigator.canShare({files:[file]})),btns=[];
+  if(can)btns.push({label:'📤 Compartir (WhatsApp…)',cls:'primary',val:'share'});btns.push({label:'⬇ Guardar imagen',cls:can?'':'primary',val:'dl'},{label:'Cerrar',val:null});
+  const r=await dialog('Tu tarjeta',`<img src="${url}" alt="Vista previa de la tarjeta" style="width:100%;border-radius:12px;display:block">`,btns);
+  if(r==='share'){try{await navigator.share({files:[file],title:b.title})}catch{}}
+  else if(r==='dl'){const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove()}
+  setTimeout(()=>URL.revokeObjectURL(url),60000)}
 
 /* ---------- Ficha de libro ---------- */
 function cdlButton(it){const isbn=cleanIsbn(it.isbn);const q=isbn.length>=10?isbn:[it.title,(it.authors||[])[0]].filter(Boolean).join(' ');
@@ -558,7 +683,9 @@ function renderBook(id){
   $('#main').innerHTML=`<div class="detail">
    <div class="hero">${coverHTML(b)}<div><h2 class="serif">${esc(b.title)}</h2>${b.subtitle?`<div class="muted">${esc(b.subtitle)}</div>`:''}<div style="margin-top:4px">${esc(authStr(b))||'<span class="muted">Autor desconocido</span>'}</div>
      <div style="margin-top:8px"><button class="btn small" data-act="toggle-status" data-id="${id}">${b.status==='leido'?'✓ Leído':'⏳ Pendiente de leer'}</button></div>${b.status==='leido'&&(b.formats||[]).length?`<div class="small" style="margin-top:8px">${(b.formats||[]).map(f=>f==='fisico'?'📕 Físico':'📱 Electrónico').join(' &nbsp;·&nbsp; ')}</div>`:''}${b.status==='leido'&&(b.startDate||b.endDate)?`<div class="small" style="margin-top:6px">${b.startDate?`📅 Inicio: ${fmtDay(b.startDate)}`:''}${b.startDate&&b.endDate?'<br>':''}${b.endDate?`🏁 Fin: ${fmtDay(b.endDate)}`:''}</div>`:''}${seriesLink(b)}<div style="margin-top:8px">${cdlButton(b)}</div></div></div>
+   ${loanSec(b)}${b.status==='leido'?readsSec(b):''}
    <section><h3>Mi valoración</h3>${stars(b.rating||0,'rate')}<div class="muted small">${b.rating?`${b.rating} de 5 · <button class="btn ghost small" data-act="rate" data-v="0" style="min-height:0;padding:0">quitar valoración</button>`:'Sin valorar'}</div></section>
+   <section><h3>Compartir</h3><button class="btn small" data-act="share-card" data-id="${id}">🖼 Crear tarjeta de lectura</button><div class="small muted" style="margin-top:6px">Una imagen con la portada, tus estrellas y una cita, lista para WhatsApp.</div></section>
    <section><h3>Sinopsis y datos ${srcPill(b)}</h3>${b.synopsis?`<p style="white-space:pre-wrap">${esc(b.synopsis)}</p>`:'<p class="muted">Sin sinopsis.</p>'}${dlRows(b)}</section>
    <section><h3>Personajes principales</h3>${(b.characters||[]).length?b.characters.map(c=>`<div class="chr"><b>${esc(c.name)}</b>${c.desc?`<div class="small">${esc(c.desc)}</div>`:'<div class="small muted">Sin descripción</div>'}</div>`).join(''):'<p class="muted">Aún no hay personajes.</p>'}</section>
    <section><div class="row"><h3 class="grow" style="margin:0">Citas interesantes</h3><button class="btn small" data-act="add-quote" data-id="${id}">+ Añadir cita</button></div>
@@ -619,7 +746,7 @@ function renderForm(){
   const errs=(F.errs||[]).map(e=>`<div class="banner err">${esc(e)}</div>`).join('');
   const autoB=F.auto&&!F.auto.confirmed?`<div class="banner"><b>Datos automáticos pendientes de revisión</b><div class="small">Procedentes de ${esc(F.auto.source)}. Pueden contener errores: revísalos y corrígelos antes de confirmar. Los campos marcados como «auto» vienen de la búsqueda.</div>
      <div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="btn small primary" data-act="confirm-auto">Confirmar datos</button><button class="btn small" data-act="reject-auto">Rechazar y rellenar a mano</button></div></div>`:
-     (F.auto&&F.auto.confirmed?`<div class="banner" style="background:#e6f0e3;border-color:#bcd5b6">✓ Datos confirmados por ti (${esc(F.auto.source)}). Siguen siendo editables.</div>`:'');
+     (F.auto&&F.auto.confirmed?`<div class="banner ok">✓ Datos confirmados por ti (${esc(F.auto.source)}). Siguen siendo editables.</div>`:'');
   const el=document.createElement('div');el.id='sheet';el.className='sheet';
   el.innerHTML=`<div class="bar row"><h2 class="grow" style="margin:0;font-size:1.25rem">${F.isNew?(book?'Añadir libro':'Añadir a la lista de deseos'):'Editar'}</h2></div>
   <div class="body">
@@ -629,7 +756,7 @@ function renderForm(){
    <div class="banner" style="margin-top:16px"><b>Completar automáticamente</b> <span class="small muted">(opcional)</span>
     <div class="small muted" style="margin:4px 0 8px">También puedes saltarte esto y rellenar todo a mano.</div>
     <label for="srcsel" style="margin-top:6px">Buscar en</label><select id="srcsel">${SRC_OPTS.map(o=>`<option value="${o[0]}" ${srcPref()===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select>
-    <div class="row" style="flex-wrap:wrap;margin-top:10px"><button class="btn primary small" data-act="search">🔍 Buscar en Internet</button><button class="btn small ghost" data-act="gbkey">⚙ Clave de Google</button></div></div>
+    <div class="row" style="flex-wrap:wrap;margin-top:10px"><button class="btn primary small" data-act="search">🔍 Buscar en Internet</button><button class="btn small" data-act="scan">📷 Escanear ISBN</button><button class="btn small ghost" data-act="gbkey">⚙ Clave de Google</button></div></div>
    ${errs}${res}${autoB}
    <h3 style="margin:24px 0 6px">Portada</h3>
    <div class="row" style="align-items:flex-start"><div style="width:96px;flex:0 0 96px">${hasCover?coverHTML(cov):'<div class="cover"><div class="ph" style="background:#e9e0cf"><span>Sin portada</span></div></div>'}</div>
@@ -833,6 +960,34 @@ async function importBackup(j){
   toast(`Copia importada: ${recs.books.length} libros, ${recs.quotes.length} citas, ${recs.wishlist.length} en deseos`+((skipB+skipW)?` · ${skipB+skipW} ya existían y no se tocaron`:''),6000);
   return {books:recs.books.length,quotes:recs.quotes.length,wishlist:recs.wishlist.length}}
 const backupAge=()=>{try{const t=+localStorage.getItem('lastBackup');return t?Math.floor((Date.now()-t)/864e5):null}catch{return null}};
+/* ---- versiones automáticas (dentro de la app) y recordatorio de copia ---- */
+const daysSince=ts=>ts?Math.floor((Date.now()-ts)/864e5):null;
+async function takeSnap(reason){
+  const rec={id:String(Date.now()),at:new Date().toISOString(),reason,books:S.books,quotes:S.quotes,wishlist:S.wish};
+  await tx('snaps',t=>{t.objectStore('snaps').put(rec)});
+  const all=(await getAll('snaps')).sort((a,b)=>b.id.localeCompare(a.id));
+  if(all.length>3)await tx('snaps',t=>all.slice(3).forEach(x=>t.objectStore('snaps').delete(x.id)));
+  setPref('lastSnap',String(Date.now()))}
+async function autoSnap(){if(!(S.books.length||S.wish.length))return;const d=daysSince(+getPref('lastSnap','0'));if(d===null||d>=7)await takeSnap('automática')}
+async function snapsDialog(){
+  const L=(await getAll('snaps')).sort((a,b)=>b.id.localeCompare(a.id));
+  if(!L.length){await ask('Versiones automáticas','Todavía no hay ninguna. La app guarda una sola cada 7 días mientras la usas.',[{label:'Cerrar',val:null}]);return}
+  const r=await dialog('Versiones automáticas',`<p class="muted small" style="margin:0 0 8px">Son copias internas que hace la app sola (se conservan las 3 últimas). Sirven para <b>deshacer un error</b>, como borrar un libro sin querer. <b>No salen de tu móvil</b>: si lo pierdes, solo te salva una copia compartida.</p>`,
+    [...L.map(x=>({label:`${new Date(x.at).toLocaleDateString('es-ES',{day:'numeric',month:'short'})}, ${new Date(x.at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})} · ${x.books.length} libros · ${x.reason}`,val:x.id})),{label:'Cancelar',val:null}]);
+  if(!r)return;const sn=L.find(x=>x.id===r);
+  if(!await ask('¿Volver a esta versión?',`Se reemplazarán <b>todos</b> tus datos actuales por los de esa versión (${sn.books.length} libros, ${sn.quotes.length} citas, ${sn.wishlist.length} en deseos). Antes se guarda una versión de tu estado actual, así que podrás volver atrás.`,[{label:'Sí, volver a esta versión',cls:'danger',val:true},{label:'Cancelar',val:false}]))return;
+  try{await takeSnap('antes de restaurar');
+    await tx(['books','quotes','wishlist'],t=>{[['books',sn.books],['quotes',sn.quotes],['wishlist',sn.wishlist]].forEach(([st,arr])=>{const os=t.objectStore(st);os.clear();arr.forEach(x=>os.put(x))})});
+    await reload();render();toast('Versión restaurada ✓',4000)}
+  catch(e){toast('No se pudo restaurar: '+(e&&e.message||'error')+'. Tus datos actuales no se han tocado.',5000)}}
+const REMIND_LBL=d=>d==='0'?'nunca':'cada '+d+' días';
+async function maybeRemind(){const days=+getPref('remindDays','14');if(!days||!S.books.length)return;
+  const age=backupAge();let due;
+  if(age===null){const f=+getPref('firstUse','0');due=!!f&&(Date.now()-f)>=Math.min(days,3)*864e5}else due=age>=days;
+  if(!due||Date.now()<+getPref('remindAt','0'))return;
+  const r=await dialog('Es hora de guardar una copia',`<p class="muted small" style="margin:0">${age===null?'Aún no has hecho ninguna copia de tus libros.':`Tu última copia tiene ${age} días.`} Tus libros solo están en este móvil: una copia compartida (WhatsApp, correo o Drive) te protege si lo pierdes o lo cambias. Son dos toques.</p>`,
+    [{label:'💾 Crear copia ahora',cls:'primary',val:'now'},{label:'Recordármelo mañana',val:'later'},{label:'No volver a avisarme',val:'never'}]);
+  if(r==='now')exportBackup();else if(r==='never'){setPref('remindDays','0');toast('Vale, no te avisaré. Puedes reactivarlo en 💾.',3500)}else setPref('remindAt',String(Date.now()+864e5))}
 async function importJSON(file){
   try{const j=JSON.parse(await blobRead(file,'text'));if(j&&j.app==='mi-biblioteca'&&j.type==='backup'){await importBackup(j);return}
     if(!j||j.app!=='mi-biblioteca'||j.type!=='wishlist'||!Array.isArray(j.items))throw new Error('no es una exportación de lista de deseos de esta app');
@@ -890,7 +1045,20 @@ const ACT={
     if(r){setPref('goal',r.n?String(r.n):'');renderHome()}},
   back:()=>{location.hash='#/'},'back-wish':()=>{location.hash='#/wish'},
   'new-book':()=>openForm('book'),'new-wish':()=>openForm('wish'),
-  'open-book':t=>{location.hash='#/book/'+t.dataset.id},'open-wish':t=>{location.hash='#/wish/'+t.dataset.id},
+  'open-book':t=>{location.hash='#/book/'+t.dataset.id},
+  scan:scanFlow,'share-card':t=>shareCard(t.dataset.id),
+  'loan-new':async t=>{const b=S.books.find(x=>x.id===t.dataset.id);if(!b)return;
+    const r=await dialog('Prestar «'+b.title+'»',`<label for="lw">¿A quién se lo dejas?</label><input id="lw" autocomplete="off" placeholder="Nombre"><label for="ld">Desde</label><input type="date" id="ld" value="${today()}"><label for="ln">Nota (opcional)</label><input id="ln" autocomplete="off">`,
+     [{label:'Guardar préstamo',cls:'primary',get:m=>{const to=$('#lw',m).value.trim();if(!to){$('#lw',m).focus();return undefined}return{to,since:$('#ld',m).value||today(),note:$('#ln',m).value.trim()}}},{label:'Cancelar',val:null}]);
+    if(r)await patchBook(b.id,x=>({...x,loan:r}))},
+  'loan-return':async t=>{const b=S.books.find(x=>x.id===t.dataset.id);if(!b||!b.loan)return;
+    if(!await ask('¿Te lo han devuelto?',`Se anotará la devolución de «${esc(b.title)}» (${esc(b.loan.to)}) con la fecha de hoy.`,[{label:'Sí, devuelto',cls:'primary',val:true},{label:'Cancelar',val:false}]))return;
+    await patchBook(b.id,x=>({...x,loanHistory:[...(x.loanHistory||[]),{to:x.loan.to,since:x.loan.since,returned:today()}],loan:null}));toast('Devuelto ✓')},
+  'reread-add':async t=>{const b=S.books.find(x=>x.id===t.dataset.id);if(!b)return;
+    const r=await dialog('Otra lectura de «'+b.title+'»',`<div class="two"><div><label for="rs">Inicio</label><input type="date" id="rs"></div><div><label for="re">Fin</label><input type="date" id="re" value="${today()}"></div></div><p class="small" id="rerr" style="color:var(--danger);margin:6px 0 0"></p>`,
+     [{label:'Guardar lectura',cls:'primary',get:m=>{const a=$('#rs',m).value,e=$('#re',m).value;if(!a&&!e){$('#rerr',m).textContent='Pon al menos una fecha.';return undefined}if(a&&e&&e<a){$('#rerr',m).textContent='El fin no puede ser anterior al inicio.';return undefined}return{start:a,end:e}}},{label:'Cancelar',val:null}]);
+    if(r)await patchBook(b.id,x=>({...x,rereads:[...(x.rereads||[]),r]}))},
+  'reread-del':async t=>{if(!await confirmDel('¿Quitar esta lectura?','Se borra solo este registro de relectura.'))return;await patchBook(t.dataset.id,x=>({...x,rereads:(x.rereads||[]).filter((_,i)=>i!==+t.dataset.i)}))},'open-wish':t=>{location.hash='#/wish/'+t.dataset.id},
   filters:filtersDialog,wfilters:wfiltersDialog,
   'clear-f':()=>{S.f={author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:'',series:''};S.q='';renderLib()},'clear-wf':()=>{S.wf={genre:'',prio:'',from:'',to:''};S.wq='';renderWish()},
   'edit-book':t=>openForm('book',S.books.find(b=>b.id===t.dataset.id)),'edit-wish':t=>openForm('wish',S.wish.find(b=>b.id===t.dataset.id)),
@@ -950,9 +1118,9 @@ const ACT={
     {label:'CSV (coma) · Excel, Google Sheets',val:'csv'},{label:'CSV (punto y coma) · Excel en español',val:'csv-es'},{label:'PDF · lista legible',val:'pdf'},{label:'JSON · copia completa para importar',val:'json'},{label:'Cancelar',val:null}]);
     if(r)doExport(r)},
   import:()=>$('#file-json').click(),
-  backup:async()=>{const a=backupAge();const r=await dialog('Copia de seguridad',`<p class="muted small" style="margin:0 0 8px">Guarda <b>toda</b> tu biblioteca (libros, portadas, citas, observaciones y lista de deseos) en un archivo. Sirve para <b>cambiar de móvil</b> o recuperar tus datos. Se crea en tu dispositivo; no se envía a ningún servidor.</p><p class="small" style="margin:0 0 8px">${a===null?'Aún no has hecho ninguna copia.':`Última copia: hace ${a} día${a===1?'':'s'}.`}</p><p class="muted small" style="margin:0"><b>Para cambiar de móvil:</b> pulsa «Crear copia» y compártela por WhatsApp o correo (a ti mismo) o guárdala en Drive. En el móvil nuevo, abre la app, descarga el archivo y pulsa «Restaurar desde una copia».</p><p class="muted small" style="margin:10px 0 0">Versión de la app: ${APP_VERSION}</p>`,
-    [{label:'⬇ Crear copia de seguridad',cls:'primary',val:'export'},{label:'⬆ Restaurar desde una copia',val:'import'},{label:'🔄 Actualizar la app (no borra tus libros)',val:'update'},{label:'🔊 Sonidos: '+(soundOn()?'activados':'desactivados')+' (tocar para cambiar)',val:'sound'},{label:'Cerrar',val:null}]);
-    if(r==='sound'){setPref('sound',soundOn()?'off':'on');toast('Sonidos '+(soundOn()?'activados':'desactivados'),1800);sndClick()}else if(r==='export')exportBackup();else if(r==='update'){toast('Actualizando…',1500);forceUpdate()}else if(r==='import'){toast('Elige el archivo copia_biblioteca_….json',3000);$('#file-json').click()}}};
+  backup:async()=>{const a=backupAge();const nsn=(await getAll('snaps')).length;const r=await dialog('Copia de seguridad',`<p class="muted small" style="margin:0 0 8px">Guarda <b>toda</b> tu biblioteca (libros, portadas, citas, observaciones y lista de deseos) en un archivo. Sirve para <b>cambiar de móvil</b> o recuperar tus datos. Se crea en tu dispositivo; no se envía a ningún servidor.</p><p class="small" style="margin:0 0 8px">${a===null?'Aún no has hecho ninguna copia.':`Última copia: hace ${a} día${a===1?'':'s'}.`}</p><p class="muted small" style="margin:0"><b>Para cambiar de móvil:</b> pulsa «Crear copia» y compártela por WhatsApp o correo (a ti mismo) o guárdala en Drive. En el móvil nuevo, abre la app, descarga el archivo y pulsa «Restaurar desde una copia».</p><p class="muted small" style="margin:8px 0 0">Además, la app guarda sola una versión interna cada 7 días para deshacer errores, pero esa no sale del móvil.</p><p class="muted small" style="margin:10px 0 0">Versión de la app: ${APP_VERSION}</p>`,
+    [{label:'⬇ Crear copia de seguridad',cls:'primary',val:'export'},{label:'⬆ Restaurar desde una copia',val:'import'},{label:`🕘 Versiones automáticas (${nsn})`,val:'snaps'},{label:'⏰ Recordatorio de copia: '+REMIND_LBL(getPref('remindDays','14'))+' (tocar para cambiar)',val:'remind'},{label:'🔄 Actualizar la app (no borra tus libros)',val:'update'},{label:'🌙 Aspecto: '+THEME_LBL[getPref('theme','auto')]+' (tocar para cambiar)',val:'theme'},{label:'🔊 Sonidos: '+(soundOn()?'activados':'desactivados')+' (tocar para cambiar)',val:'sound'},{label:'Cerrar',val:null}]);
+    if(r==='snaps')snapsDialog();else if(r==='remind'){const o={'7':'14','14':'30','30':'0','0':'7'}[getPref('remindDays','14')]||'14';setPref('remindDays',o);toast('Recordatorio: '+REMIND_LBL(o),2200);sndClick()}else if(r==='theme'){const o={auto:'dark',dark:'light',light:'auto'}[getPref('theme','auto')]||'auto';setPref('theme',o);applyTheme();toast('Aspecto: '+THEME_LBL[o],1800);sndClick()}else if(r==='sound'){setPref('sound',soundOn()?'off':'on');toast('Sonidos '+(soundOn()?'activados':'desactivados'),1800);sndClick()}else if(r==='export')exportBackup();else if(r==='update'){toast('Actualizando…',1500);forceUpdate()}else if(r==='import'){toast('Elige el archivo copia_biblioteca_….json',3000);$('#file-json').click()}}};
 function formChanged(){const o=F.orig;if(!o)return true;const r=buildRecord();const k=['series','seriesNo','startDate','endDate','title','subtitle','synopsis','pubDate','publisher','isbn','language','notes','status','rating','priority','personalNote','coverUrl'];
   return k.some(x=>(r[x]||'')!==(o[x]||''))||authStr(r)!==authStr(o)||(r.genres||[]).join()!==(o.genres||[]).join()||r.coverBlob!==(o.coverBlob||null)||JSON.stringify(r.characters||[])!==JSON.stringify(o.characters||[])||JSON.stringify(r.formats||[])!==JSON.stringify(o.formats||[])}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const f=ACT[t.dataset.act];if(f){sndClick();Promise.resolve(f(t,e)).catch(err=>toast('Error: '+(err&&err.message||err),5000))}});
@@ -969,11 +1137,14 @@ document.addEventListener('change',e=>{const t=e.target;
 
 /* ======================= Arranque ======================= */
 (async function init(){
+  applyTheme();
   try{db=await openDB();await reload();
     if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
     if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
+    if(!getPref('firstUse',''))setPref('firstUse',String(Date.now()));
     if(!location.hash)history.replaceState(null,'','#/inicio');
-    render()}
+    render();
+    autoSnap().catch(()=>{});setTimeout(()=>maybeRemind().catch(()=>{}),1500)}
   catch(e){$('#main').innerHTML=`<div class="banner err"><b>No se pudo abrir el almacenamiento local.</b><br>${esc(e&&e.message||e)}<br>Es posible que estés en modo privado o que el navegador bloquee el almacenamiento.</div>`}
 })();
 </script>
