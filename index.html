@@ -218,7 +218,7 @@ const hue=s=>{let h=0;for(const c of s||'')h=(h*31+c.charCodeAt(0))%360;return h
 const cleanIsbn=s=>(s||'').replace(/[^0-9Xx]/g,'').toUpperCase();
 const PRIO={alta:3,media:2,baja:1};
 const LANGS={spa:'Español',es:'Español',eng:'Inglés',en:'Inglés',fre:'Francés',fra:'Francés',fr:'Francés',ger:'Alemán',deu:'Alemán',de:'Alemán',ita:'Italiano',it:'Italiano',por:'Portugués',pt:'Portugués',cat:'Catalán',ca:'Catalán',glg:'Gallego',gl:'Gallego',eus:'Euskera',baq:'Euskera',eu:'Euskera'};
-const APP_VERSION='17 · ajustes';
+const APP_VERSION='18 · ISBN en español';
 const IC={home:'m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10',book:'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20',mark:'m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z',
   quote:'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zM15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
   chart:'M3 3v16a2 2 0 0 0 2 2h16M18 17V9M13 17V5M8 17v-3',clock:'M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',cal:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
@@ -625,7 +625,12 @@ async function scanFlow(){
   F.isbn=code;F.edited.delete('isbn');F.searching=true;F.results=null;F.errs=[];renderForm();
   const out=await Promise.allSettled([searchOL('','',code),searchGB('','',code)]);
   const ok=[];out.forEach(o=>{if(o.status==='fulfilled')ok.push(...o.value.filter(r=>r.title))});
-  ok.sort((a,b)=>(b.cover?1:0)-(a.cover?1:0));
+  // Open Library devuelve el título de la obra (a menudo en inglés): se pide la edición exacta del ISBN para usar su título e idioma
+  const ed=await fetchT('https://openlibrary.org/isbn/'+code+'.json').then(r=>r.ok?r.json():null).catch(()=>null);
+  if(ed&&ed.title)ok.forEach(r=>{if(r.src==='Open Library'){r.title=ed.title;r.subtitle=ed.subtitle||'';r.langs=(ed.languages||[]).map(l=>String(l.key||'').split('/').pop());r.edLang=true;if(ed.key)r.ed=String(ed.key).split('/').pop()}});
+  const isEs=r=>r.src==='Google Books'?(r.gb&&r.gb.lang==='es'):!!(r.edLang&&(r.langs||[]).includes('spa'));
+  const score=r=>(isEs(r)?4:0)+(r.src==='Google Books'?2:0)+(r.cover?1:0);
+  ok.sort((a,b)=>score(b)-score(a));
   if(!ok.length){F.searching=false;F.errs=[navigator.onLine?`No se encontró el ISBN ${code}. Se ha puesto en su campo; completa el resto a mano.`:'Sin conexión: el ISBN queda guardado en su campo. Completa el resto cuando tengas Internet.'];renderForm();return}
   await applyResult(ok[0],false);F.isbn=code;renderForm();toast('Libro encontrado ✓ Revisa los datos',3200)}
 
