@@ -119,6 +119,12 @@ const hue=s=>{let h=0;for(const c of s||'')h=(h*31+c.charCodeAt(0))%360;return h
 const cleanIsbn=s=>(s||'').replace(/[^0-9Xx]/g,'').toUpperCase();
 const PRIO={alta:3,media:2,baja:1};
 const LANGS={spa:'Español',es:'Español',eng:'Inglés',en:'Inglés',fre:'Francés',fra:'Francés',fr:'Francés',ger:'Alemán',deu:'Alemán',de:'Alemán',ita:'Italiano',it:'Italiano',por:'Portugués',pt:'Portugués',cat:'Catalán',ca:'Catalán',glg:'Gallego',gl:'Gallego',eus:'Euskera',baq:'Euskera',eu:'Euskera'};
+const APP_VERSION='9 · fechas de lectura';
+function reloadPage(){location.reload()}
+async function forceUpdate(){ // borra solo la caché de la app; los libros (IndexedDB) NO se tocan
+  try{if(navigator.serviceWorker){const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.map(r=>r.unregister()))}
+    if(window.caches){const ks=await caches.keys();await Promise.all(ks.map(k=>caches.delete(k)))}}catch{}
+  reloadPage()}
 let toastT;
 function toast(m,ms=2600){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),ms)}
 
@@ -688,9 +694,9 @@ const ACT={
     {label:'CSV (coma) · Excel, Google Sheets',val:'csv'},{label:'CSV (punto y coma) · Excel en español',val:'csv-es'},{label:'PDF · lista legible',val:'pdf'},{label:'JSON · copia completa para importar',val:'json'},{label:'Cancelar',val:null}]);
     if(r)doExport(r)},
   import:()=>$('#file-json').click(),
-  backup:async()=>{const a=backupAge();const r=await dialog('Copia de seguridad',`<p class="muted small" style="margin:0 0 8px">Guarda <b>toda</b> tu biblioteca (libros, portadas, citas, observaciones y lista de deseos) en un archivo. Sirve para <b>cambiar de móvil</b> o recuperar tus datos. Se crea en tu dispositivo; no se envía a ningún servidor.</p><p class="small" style="margin:0 0 8px">${a===null?'Aún no has hecho ninguna copia.':`Última copia: hace ${a} día${a===1?'':'s'}.`}</p><p class="muted small" style="margin:0"><b>Para cambiar de móvil:</b> pulsa «Crear copia» y compártela por WhatsApp o correo (a ti mismo) o guárdala en Drive. En el móvil nuevo, abre la app, descarga el archivo y pulsa «Restaurar desde una copia».</p>`,
-    [{label:'⬇ Crear copia de seguridad',cls:'primary',val:'export'},{label:'⬆ Restaurar desde una copia',val:'import'},{label:'Cerrar',val:null}]);
-    if(r==='export')exportBackup();else if(r==='import'){toast('Elige el archivo copia_biblioteca_….json',3000);$('#file-json').click()}}};
+  backup:async()=>{const a=backupAge();const r=await dialog('Copia de seguridad',`<p class="muted small" style="margin:0 0 8px">Guarda <b>toda</b> tu biblioteca (libros, portadas, citas, observaciones y lista de deseos) en un archivo. Sirve para <b>cambiar de móvil</b> o recuperar tus datos. Se crea en tu dispositivo; no se envía a ningún servidor.</p><p class="small" style="margin:0 0 8px">${a===null?'Aún no has hecho ninguna copia.':`Última copia: hace ${a} día${a===1?'':'s'}.`}</p><p class="muted small" style="margin:0"><b>Para cambiar de móvil:</b> pulsa «Crear copia» y compártela por WhatsApp o correo (a ti mismo) o guárdala en Drive. En el móvil nuevo, abre la app, descarga el archivo y pulsa «Restaurar desde una copia».</p><p class="muted small" style="margin:10px 0 0">Versión de la app: ${APP_VERSION}</p>`,
+    [{label:'⬇ Crear copia de seguridad',cls:'primary',val:'export'},{label:'⬆ Restaurar desde una copia',val:'import'},{label:'🔄 Actualizar la app (no borra tus libros)',val:'update'},{label:'Cerrar',val:null}]);
+    if(r==='export')exportBackup();else if(r==='update'){toast('Actualizando…',1500);forceUpdate()}else if(r==='import'){toast('Elige el archivo copia_biblioteca_….json',3000);$('#file-json').click()}}};
 function formChanged(){const o=F.orig;if(!o)return true;const r=buildRecord();const k=['startDate','endDate','title','subtitle','synopsis','pubDate','publisher','isbn','language','notes','status','rating','priority','personalNote','coverUrl'];
   return k.some(x=>(r[x]||'')!==(o[x]||''))||authStr(r)!==authStr(o)||(r.genres||[]).join()!==(o.genres||[]).join()||r.coverBlob!==(o.coverBlob||null)||JSON.stringify(r.characters||[])!==JSON.stringify(o.characters||[])||JSON.stringify(r.formats||[])!==JSON.stringify(o.formats||[])}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const f=ACT[t.dataset.act];if(f){Promise.resolve(f(t,e)).catch(err=>toast('Error: '+(err&&err.message||err),5000))}});
@@ -709,7 +715,7 @@ document.addEventListener('change',e=>{const t=e.target;
 (async function init(){
   try{db=await openDB();await reload();
     if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
-    if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
+    if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
     render()}
   catch(e){$('#main').innerHTML=`<div class="banner err"><b>No se pudo abrir el almacenamiento local.</b><br>${esc(e&&e.message||e)}<br>Es posible que estés en modo privado o que el navegador bloquee el almacenamiento.</div>`}
 })();
