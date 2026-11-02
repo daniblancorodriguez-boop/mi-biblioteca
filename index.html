@@ -133,11 +133,13 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .tlc{display:flex!important;gap:12px;background:var(--card);border:1px solid var(--line)!important;border-radius:16px;padding:12px!important;margin-bottom:12px}
 .tlc .cv{flex:0 0 48px;width:48px}.tlc .in{flex:1;min-width:0}.tlc .in b{display:block;font-family:var(--f);font-size:1.05rem;line-height:1.2}
 .dp{display:inline-block;padding:2px 9px;border-radius:10px;background:#dde5ee;color:#2f4560;font-size:.75rem;font-weight:700}
-.fan{position:relative;height:272px;margin-top:6px}
-.fan .fl,.fan .fr{position:absolute;top:46px;width:112px}
-.fan .fl{left:calc(50% - 152px);transform:rotate(-9deg)}.fan .fr{right:calc(50% - 152px);transform:rotate(9deg)}
-.fan .fc{position:absolute;left:50%;top:6px;width:150px;margin-left:-75px;z-index:2}
-.fan .cover{box-shadow:0 10px 22px #14261d55}
+.cf{position:relative;height:292px;margin:6px -16px 0;display:flex;align-items:center;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;perspective:900px;overscroll-behavior-x:contain}
+.cf::-webkit-scrollbar{display:none}
+.cf:before,.cf:after{content:"";flex:0 0 calc(50% - 55px);height:1px}
+.cf .it{flex:0 0 110px;width:110px;min-width:0;height:100%;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;scroll-snap-stop:always}
+.cf .it .card{flex:0 0 150px;width:150px;will-change:transform}
+.cf .cover{box-shadow:0 10px 22px #14261d55}
+@media(prefers-reduced-motion:reduce){.cf{scroll-behavior:auto}}
 .hcap{margin-top:10px;align-items:center}.hname{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;line-height:1.15}
 .hpills{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
 .hpill{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;border-radius:24px;background:#fff;border:2px solid var(--ink);font-weight:600;color:var(--ink)}
@@ -175,7 +177,7 @@ const hue=s=>{let h=0;for(const c of s||'')h=(h*31+c.charCodeAt(0))%360;return h
 const cleanIsbn=s=>(s||'').replace(/[^0-9Xx]/g,'').toUpperCase();
 const PRIO={alta:3,media:2,baja:1};
 const LANGS={spa:'Español',es:'Español',eng:'Inglés',en:'Inglés',fre:'Francés',fra:'Francés',fr:'Francés',ger:'Alemán',deu:'Alemán',de:'Alemán',ita:'Italiano',it:'Italiano',por:'Portugués',pt:'Portugués',cat:'Catalán',ca:'Catalán',glg:'Gallego',gl:'Gallego',eus:'Euskera',baq:'Euskera',eu:'Euskera'};
-const APP_VERSION='11 · identidad Cubierta';
+const APP_VERSION='12 · ruleta de portadas';
 const IC={home:'m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10',book:'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20',mark:'m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z',
   quote:'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zM15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
   chart:'M3 3v16a2 2 0 0 0 2 2h16M18 17V9M13 17V5M8 17v-3',clock:'M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',cal:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
@@ -392,11 +394,11 @@ function renderHome(){
   const doneYear=read.filter(b=>yearOf(b)===yr).length,tlN=read.filter(b=>b.endDate||b.startDate).length;
   $('#top').innerHTML=`<div class="row"><h1 class="grow">Mi biblioteca</h1>${BTN_BACKUP}<button class="plus" data-act="new-book" aria-label="Añadir libro">+</button></div>`;
   const age=backupAge(),warn=S.books.length&&(age===null||age>=30)?`<div class="banner"><b>Haz una copia de seguridad</b><div class="small">Tus libros solo están en este dispositivo. ${age===null?'Aún no has hecho ninguna copia.':`Tu última copia tiene ${age} días.`}</div><button class="btn small primary" data-act="backup" style="margin-top:8px">💾 Copia de seguridad</button></div>`:'';
-  const byNew=(a,b)=>b.addedAt.localeCompare(a.addedAt),pool=pend.length?[...pend].sort(byNew):[...S.books].sort(byNew);
+  const byNew=(a,b)=>b.addedAt.localeCompare(a.addedAt),pool=[...[...pend].sort(byNew),...S.books.filter(b=>b.status!=='pendiente').sort(byNew)].slice(0,60);
   let hero='';
-  if(pool.length){const [c,l,r]=pool;
-    hero=`<div class="fan">${l?`<div class="fl">${coverHTML(l)}</div>`:''}${r?`<div class="fr">${coverHTML(r)}</div>`:''}<button class="fc card" data-act="open-book" data-id="${c.id}" aria-label="${esc(c.title)}">${coverHTML(c)}</button></div>
-    <div class="row hcap"><div class="grow"><div class="small muted" style="font-weight:600">${pend.length?'Lo siguiente en tu lista':'Lo último que has añadido'}</div><div class="hname">${esc(c.title)}${authStr(c)?', '+esc(authStr(c)):''}</div></div><button class="btn primary" data-act="open-book" data-id="${c.id}">Ver ficha</button></div>`}
+  if(pool.length){
+    hero=`<div class="cf" id="cf" role="region" aria-roledescription="carrusel" aria-label="Tus libros. Desliza para explorar">${pool.map((b,i)=>`<div class="it"><button class="card" data-act="cf-pick" data-i="${i}" data-id="${b.id}" aria-label="${esc(b.title)}">${coverHTML(b)}</button></div>`).join('')}</div>
+    <div class="row hcap"><div class="grow"><div class="small muted" id="cf-label" style="font-weight:600">&nbsp;</div><div class="hname" id="cf-name">&nbsp;</div></div><button class="btn primary" id="cf-btn" data-act="open-book" data-id="${pool[0].id}">Ver ficha</button></div>`}
   const pill=(ic,l,n,act,h)=>`<button class="hpill" data-act="${act}"${h?` data-h="${h}"`:''}>${ico(ic)}<span>${l}</span><b>${n}</b></button>`;
   const pills=`<div class="hpills">${pill('book','Biblioteca',S.books.length,'go','#/')}${pill('mark','Deseos',S.wish.length,'go','#/wish')}${pill('quote','Citas',S.quotes.length,'go','#/citas')}${pill('clock','Por leer',pend.length,'go-pending')}${pill('chart','Estadísticas',yr,'go','#/stats')}${pill('cal','Cronología',tlN,'go','#/timeline')}</div>`;
   const g=goalN(),nb=Math.min(g,36),filled=g?Math.round(Math.min(doneYear,g)/g*nb):0;
@@ -404,7 +406,23 @@ function renderHome(){
   let qod='';
   if(S.quotes.length){const q=S.quotes[Math.floor(Date.now()/864e5)%S.quotes.length],b=S.books.find(x=>x.id===q.bookId);
     qod=`<div style="margin-top:28px"><button class="qfeat" data-act="go" data-h="#/citas"><span class="top"><span>Cita del día</span></span><p>“${esc(q.text)}”</p><span class="small">${esc(b?b.title:'')}${q.page?' · pág. '+esc(q.page):''}</span></button></div>`}
-  $('#main').innerHTML=warn+hero+(S.books.length?'':'<p class="muted" style="margin:16px 0;text-align:center">Pulsa <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p>')+pills+goal+qod}
+  $('#main').innerHTML=warn+hero+(S.books.length?'':'<p class="muted" style="margin:16px 0;text-align:center">Pulsa <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p>')+pills+goal+qod;
+  if(pool.length)initCarousel(pool)}
+
+/* ---------- Ruleta de portadas (Inicio) ---------- */
+const CF_STEP=110;
+function initCarousel(pool){const cf=$('#cf');if(!cf)return;let cur=-1,raf=0;
+  const items=[...cf.querySelectorAll('.it .card')];
+  function paint(){raf=0;if(!cf.isConnected)return;const x=cf.scrollLeft;
+    items.forEach((el,i)=>{const d=i-x/CF_STEP,a=Math.min(Math.abs(d),2.5);
+      el.style.transform=`rotateY(${Math.max(-1,Math.min(1,d))*-38}deg) scale(${(1-a*.16).toFixed(3)})`;
+      el.style.opacity=String(Math.max(.35,1-a*.28).toFixed(2));el.parentNode.style.zIndex=String(100-Math.round(a*10))});
+    const n=Math.max(0,Math.min(pool.length-1,Math.round(x/CF_STEP)));
+    if(n!==cur){cur=n;const b=pool[n];
+      $('#cf-label').textContent=(b.status==='pendiente'?'Por leer':'Leído'+(b.rating?' · '+'★'.repeat(b.rating)+'☆'.repeat(5-b.rating):''))+' · '+(n+1)+' de '+pool.length;
+      $('#cf-name').textContent=b.title+(authStr(b)?', '+authStr(b):'');$('#cf-btn').dataset.id=b.id;cf.dataset.cur=String(n)}}
+  cf.addEventListener('scroll',()=>{if(!raf)raf=requestAnimationFrame(paint)},{passive:true});
+  paint()}
 
 /* ---------- Citas ---------- */
 function quotesJoined(){const q=norm(S.cq);
@@ -800,6 +818,8 @@ let imgTarget=null;
 const ACT={
   tab:t=>{location.hash={home:'#/inicio',lib:'#/',wish:'#/wish',quotes:'#/citas',stats:'#/stats'}[t.dataset.v]||'#/'},
   go:t=>{location.hash=t.dataset.h},
+  'cf-pick':t=>{const cf=$('#cf'),i=+t.dataset.i;if(!cf)return;if(String(i)===cf.dataset.cur){location.hash='#/book/'+t.dataset.id;return}
+    if(cf.scrollTo)cf.scrollTo({left:i*CF_STEP,behavior:'smooth'});else{cf.scrollLeft=i*CF_STEP;cf.dispatchEvent(new Event('scroll'))}},
   'go-pending':()=>{S.f.status='pendiente';location.hash='#/'},
   schip:t=>{S.f.status=t.dataset.v;renderLib()},
   wchip:t=>{S.wf.prio=t.dataset.v;renderWish()},
