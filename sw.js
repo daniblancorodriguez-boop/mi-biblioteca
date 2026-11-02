@@ -1,7 +1,7 @@
 // Service worker: permite usar la app sin conexión.
 // Estrategia: primero Internet (así siempre ves la última versión) y, si no hay conexión, la copia guardada.
 // Las llamadas a APIs externas (Open Library, Apple Books, Google Books) NO se interceptan.
-const CACHE = 'mi-biblioteca-v13';
+const CACHE = 'mi-biblioteca-v14';
 const SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {

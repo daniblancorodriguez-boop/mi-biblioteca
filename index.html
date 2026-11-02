@@ -148,6 +148,11 @@ svg.i{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .gnum{display:flex;align-items:flex-end;gap:10px;margin-top:2px}.gnum b{font-size:6.5rem;line-height:.85;letter-spacing:-.06em;color:var(--accent);font-weight:800}.gnum span{padding-bottom:6px;font-size:1.35rem;font-weight:600;line-height:1.1}
 .gbars{display:flex;align-items:flex-end;gap:3px;height:34px;margin-top:14px}.gbars i{flex:1;border-radius:3px;background:#b9cdb7}.gbars i.on{background:var(--accent)}
 .gh{font-size:1.3rem;font-weight:800;display:block}
+.scard{display:flex;gap:14px;align-items:center;cursor:pointer}.sfan{flex:0 0 96px;width:96px;height:78px;position:relative}.sfan .sc{position:absolute;top:0;width:48px}.sfan .sc:nth-child(1){left:0;z-index:3}.sfan .sc:nth-child(2){left:22px;top:6px;z-index:2;transform:rotate(5deg)}.sfan .sc:nth-child(3){left:44px;top:12px;z-index:1;transform:rotate(10deg)}
+.sc .ph,.srow .ph,.qb .ph,.tlc .ph{font-size:.58rem;padding:3px;overflow:hidden}
+.sinfo{flex:1;min-width:0}.sinfo b{font-size:1.1rem;letter-spacing:-.02em;line-height:1.2;display:block}
+.srow{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px;margin-top:10px;flex-wrap:wrap}.srow .wmain{flex:1;min-width:0}.srow.miss{background:none;border:2px dashed #6f8a73;min-height:56px}
+.sn{flex:0 0 32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}.srow.miss .sn{background:none;color:var(--ink);border:2px solid var(--ink)}
 @media print{nav,header,.plus{display:none}}
 </style>
 </head>
@@ -177,11 +182,11 @@ const hue=s=>{let h=0;for(const c of s||'')h=(h*31+c.charCodeAt(0))%360;return h
 const cleanIsbn=s=>(s||'').replace(/[^0-9Xx]/g,'').toUpperCase();
 const PRIO={alta:3,media:2,baja:1};
 const LANGS={spa:'Español',es:'Español',eng:'Inglés',en:'Inglés',fre:'Francés',fra:'Francés',fr:'Francés',ger:'Alemán',deu:'Alemán',de:'Alemán',ita:'Italiano',it:'Italiano',por:'Portugués',pt:'Portugués',cat:'Catalán',ca:'Catalán',glg:'Gallego',gl:'Gallego',eus:'Euskera',baq:'Euskera',eu:'Euskera'};
-const APP_VERSION='13 · sonidos';
+const APP_VERSION='14 · colecciones';
 const IC={home:'m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM9 22V12h6v10',book:'M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20',mark:'m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z',
   quote:'M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1zM15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z',
   chart:'M3 3v16a2 2 0 0 0 2 2h16M18 17V9M13 17V5M8 17v-3',clock:'M12 6v6l4 2M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z',cal:'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z',
-  shuffle:'M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5',edit:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6',arrow:'M5 12h14M13 6l6 6-6 6'};
+  shuffle:'M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5',edit:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z',trash:'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6',arrow:'M5 12h14M13 6l6 6-6 6',layers:'m12 2 10 5-10 5L2 7zM2 17l10 5 10-5M2 12l10 5 10-5'};
 const ico=k=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="${IC[k]}"/></svg>`;
 $('#tabs').innerHTML=[['home','Inicio','home'],['lib','Biblioteca','book'],['wish','Deseos','mark'],['quotes','Citas','quote'],['stats','Estadísticas','chart']].map(t=>`<button data-act="tab" data-v="${t[0]}" id="tab-${t[0]}"><span class="pl">${ico(t[2])}</span><span>${t[1]}</span></button>`).join('');
 function reloadPage(){location.reload()}
@@ -214,7 +219,7 @@ const getOne=(s,k)=>rp(db.transaction(s).objectStore(s).get(k));
 function tx(stores,fn){return new Promise((res,rej)=>{const t=db.transaction(stores,'readwrite');let out;t.oncomplete=()=>res(out);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error||new Error('Transacción cancelada'));try{out=fn(t)}catch(e){t.abort();rej(e)}})}
 
 /* ======================= Estado ======================= */
-const S={books:[],wish:[],quotes:[],q:'',sort:'added-desc',f:{author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:''},
+const S={books:[],wish:[],quotes:[],q:'',sort:'added-desc',f:{author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:'',series:''},
   wq:'',wsort:'added-desc',wf:{genre:'',prio:'',from:'',to:''},cq:'',cf:'all',cb:'',featId:null,sy:null,ty:null};
 async function reload(){[S.books,S.wish,S.quotes]=await Promise.all([getAll('books'),getAll('wishlist'),getAll('quotes')])}
 
@@ -315,17 +320,18 @@ const confirmDel=(t,msg)=>ask(t,msg,[{label:'Eliminar',cls:'danger',val:true},{l
 
 /* ======================= Render principal ======================= */
 let route={name:'lib'};
-const ROUTES={wish:'wish',inicio:'home',citas:'quotes',stats:'stats',timeline:'timeline'};
+const ROUTES={wish:'wish',inicio:'home',citas:'quotes',stats:'stats',timeline:'timeline',series:'series'};
 function parseRoute(){const h=location.hash.replace(/^#\/?/,'').split('/');
   if(h[0]==='book'&&h[1])return {name:'book',id:h[1]};
   if(h[0]==='wish'&&h[1])return {name:'wishitem',id:h[1]};
+  if(h[0]==='serie'&&h[1]){let k=h[1];try{k=decodeURIComponent(k)}catch{}return {name:'serie',k}}
   return {name:ROUTES[h[0]]||'lib'}}
-const TAB_OF={home:'home',timeline:'home',lib:'lib',book:'lib',wish:'wish',wishitem:'wish',quotes:'quotes',stats:'stats'};
+const TAB_OF={home:'home',timeline:'home',series:'home',serie:'home',lib:'lib',book:'lib',wish:'wish',wishitem:'wish',quotes:'quotes',stats:'stats'};
 async function render(){route=parseRoute();
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===TAB_OF[route.name]));
   $('#tabs').style.display=(route.name==='book'||route.name==='wishitem')?'none':'flex';
-  const R={home:renderHome,lib:renderLib,wish:renderWish,quotes:renderQuotes,stats:renderStats,timeline:renderTimeline};
-  if(R[route.name])R[route.name]();else if(route.name==='book')renderBook(route.id);else renderWishItem(route.id);
+  const R={home:renderHome,lib:renderLib,wish:renderWish,quotes:renderQuotes,stats:renderStats,timeline:renderTimeline,series:renderSeries};
+  if(R[route.name])R[route.name]();else if(route.name==='serie')renderSerie(route.k);else if(route.name==='book')renderBook(route.id);else renderWishItem(route.id);
   window.scrollTo(0,0)}
 window.addEventListener('hashchange',render);
 
@@ -337,6 +343,7 @@ function libFiltered(){
     if(f.author&&!(b.authors||[]).includes(f.author))return false;
     if(f.genre&&!(b.genres||[]).includes(f.genre))return false;
     if(f.status&&b.status!==f.status)return false;
+    if(f.series&&norm(b.series)!==norm(f.series))return false;
     if(f.rating==='none'&&b.rating)return false;
     if(f.rating&&f.rating!=='none'&&b.rating!==+f.rating)return false;
     const sd=b.startDate||'',ed=b.endDate||'';
@@ -346,13 +353,14 @@ function libFiltered(){
   const s=S.sort;
   const dk=s.startsWith('end-')?'endDate':s.startsWith('start-')?'startDate':null;
   if(dk){const dir=s.endsWith('asc')?1:-1;L.sort((a,b)=>{const x=a[dk]||'',y=b[dk]||'';if(!x&&!y)return b.addedAt.localeCompare(a.addedAt);if(!x)return 1;if(!y)return -1;return dir*x.localeCompare(y)})}
+  else if(s==='series')L.sort((a,b)=>{if(!!a.series!==!!b.series)return a.series?-1:1;return norm(a.series).localeCompare(norm(b.series),'es')||(a.seriesNo||999)-(b.seriesNo||999)||norm(a.title).localeCompare(norm(b.title),'es')});
   else L.sort((a,b)=>s==='title'?c(a.title,b.title):s==='author'?c(authStr(a),authStr(b)):s==='added-asc'?a.addedAt.localeCompare(b.addedAt):s==='rating-desc'?((b.rating||0)-(a.rating||0)):s==='rating-asc'?((a.rating||0)-(b.rating||0)):b.addedAt.localeCompare(a.addedAt));
   return L}
 const activeF=f=>{const pairs=[['from','to'],['sFrom','sTo'],['eFrom','eTo']],inPair=new Set(pairs.flat());let n=Object.entries(f).filter(([k,v])=>v&&!inPair.has(k)).length;pairs.forEach(p=>{if(p.some(k=>f[k]))n++});return n}; // un rango de fechas cuenta como un solo filtro
 function renderLib(){
   $('#top').innerHTML=`<div class="row"><h1 class="grow">Mi biblioteca</h1><button class="btn" data-act="backup" aria-label="Copia de seguridad" title="Copia de seguridad">💾</button><button class="plus" data-act="new-book" aria-label="Añadir libro">+</button></div>
   <input id="q" type="search" placeholder="Buscar por título o autor" value="${esc(S.q)}" style="margin-top:8px">
-  <div class="tools"><select id="sort" aria-label="Ordenar"><option value="added-desc">Más recientes</option><option value="added-asc">Más antiguos</option><option value="title">Título A-Z</option><option value="author">Autor A-Z</option><option value="rating-desc">Mejor puntuados</option><option value="rating-asc">Peor puntuados</option><option value="end-desc">Terminados: más recientes</option><option value="end-asc">Terminados: más antiguos</option><option value="start-desc">Empezados: más recientes</option><option value="start-asc">Empezados: más antiguos</option></select>
+  <div class="tools"><select id="sort" aria-label="Ordenar"><option value="added-desc">Más recientes</option><option value="added-asc">Más antiguos</option><option value="title">Título A-Z</option><option value="author">Autor A-Z</option><option value="rating-desc">Mejor puntuados</option><option value="rating-asc">Peor puntuados</option><option value="series">Por colección</option><option value="end-desc">Terminados: más recientes</option><option value="end-asc">Terminados: más antiguos</option><option value="start-desc">Empezados: más recientes</option><option value="start-asc">Empezados: más antiguos</option></select>
   <button class="btn" data-act="filters">Filtros${activeF(S.f)?`<span class="badge">${activeF(S.f)}</span>`:''}</button></div>
   <div class="chips">${[['','Todos',S.books.length],['leido','Leídos',S.books.filter(b=>b.status==='leido').length],['pendiente','Por leer',S.books.filter(b=>b.status==='pendiente').length]].map(c=>`<button class="chip ${S.f.status===c[0]?'on':''}" data-act="schip" data-v="${c[0]}">${c[1]} ${c[2]}</button>`).join('')}</div>`;
   $('#sort').value=S.sort;
@@ -363,7 +371,7 @@ function renderGrid(){
   if(!S.books.length){g.innerHTML=`<div class="empty"><div class="big">📖</div><h2>Tu biblioteca está vacía</h2><p>Pulsa el botón <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p><button class="btn primary" data-act="new-book">Añadir un libro</button></div>`;return}
   if(!L.length){g.innerHTML=`<div class="empty"><p>Ningún libro coincide con la búsqueda o los filtros.</p><button class="btn" data-act="clear-f">Quitar filtros</button></div>`;return}
   g.innerHTML=`<div class="grid">${L.map(b=>`<button class="card" data-act="open-book" data-id="${b.id}">${coverHTML(b,b.status==='pendiente'?'<span class="tag">Pendiente</span>':'')}
-   <div class="t">${esc(b.title)}</div><div class="a">${esc(authStr(b))||'&nbsp;'}</div>
+   <div class="t">${esc(b.title)}</div><div class="a">${esc(authStr(b))||'&nbsp;'}</div>${b.series?`<div class="a" style="color:var(--accent);font-weight:600">${esc(seriesOf(b))}</div>`:''}
    ${b.rating?`<div class="r" aria-label="${b.rating} de 5">${'★'.repeat(b.rating)}${'☆'.repeat(5-b.rating)}</div>`:'<div class="r none">Sin valorar</div>'}</button>`).join('')}</div>`}
 
 /* ---------- Lista de deseos ---------- */
@@ -384,7 +392,7 @@ function renderWish(){
 function renderWGrid(){const g=$('#grid');if(!g)return;const L=wishFiltered();
   if(!S.wish.length){g.innerHTML=`<div class="empty"><div class="big">🔖</div><h2>Tu lista de deseos está vacía</h2><p>Guarda aquí los libros que quieres leer, comprar o localizar.</p><button class="btn primary" data-act="new-wish">Añadir un libro</button></div>`;return}
   if(!L.length){g.innerHTML=`<div class="empty"><p>Ningún libro coincide.</p><button class="btn" data-act="clear-wf">Quitar filtros</button></div>`;return}
-  g.innerHTML=`<div class="wl">${L.map(w=>`<div class="wc"><button class="card wmain" data-act="open-wish" data-id="${w.id}"><span class="wcv">${coverHTML(w)}</span><span class="wi"><span class="t">${esc(w.title)}</span><span class="a">${esc(authStr(w))}${(w.genres||[]).length?' · '+esc(w.genres[0]):''}</span>${w.priority?`<span class="pr ${w.priority}">Prioridad ${w.priority}</span>`:''}${w.personalNote?`<span class="wn">${esc(w.personalNote)}</span>`:''}</span></button>
+  g.innerHTML=`<div class="wl">${L.map(w=>`<div class="wc"><button class="card wmain" data-act="open-wish" data-id="${w.id}"><span class="wcv">${coverHTML(w)}</span><span class="wi"><span class="t">${esc(w.title)}</span><span class="a">${esc(authStr(w))}${(w.genres||[]).length?' · '+esc(w.genres[0]):''}</span>${w.series?`<span class="a" style="color:var(--accent);font-weight:600">${esc(seriesOf(w))}</span>`:''}${w.priority?`<span class="pr ${w.priority}">Prioridad ${w.priority}</span>`:''}${w.personalNote?`<span class="wn">${esc(w.personalNote)}</span>`:''}</span></button>
    <div class="wf">${cdlButton(w)}<button class="btn ghost small" data-act="move-wish" data-id="${w.id}">Pasar a mi biblioteca ${ico('arrow')}</button></div></div>`).join('')}</div>`}
 
 /* ======================= Pantallas nuevas: Inicio, Citas, Estadísticas, Cronología ======================= */
@@ -410,7 +418,7 @@ function renderHome(){
     hero=`<div class="cf" id="cf" role="region" aria-roledescription="carrusel" aria-label="Tus libros. Desliza para explorar">${pool.map((b,i)=>`<div class="it"><button class="card" data-act="cf-pick" data-i="${i}" data-id="${b.id}" aria-label="${esc(b.title)}">${coverHTML(b)}</button></div>`).join('')}</div>
     <div class="row hcap"><div class="grow"><div class="small muted" id="cf-label" style="font-weight:600">&nbsp;</div><div class="hname" id="cf-name">&nbsp;</div></div><button class="btn primary" id="cf-btn" data-act="open-book" data-id="${pool[0].id}">Ver ficha</button></div>`}
   const pill=(ic,l,n,act,h)=>`<button class="hpill" data-act="${act}"${h?` data-h="${h}"`:''}>${ico(ic)}<span>${l}</span><b>${n}</b></button>`;
-  const pills=`<div class="hpills">${pill('book','Biblioteca',S.books.length,'go','#/')}${pill('mark','Deseos',S.wish.length,'go','#/wish')}${pill('quote','Citas',S.quotes.length,'go','#/citas')}${pill('clock','Por leer',pend.length,'go-pending')}${pill('chart','Estadísticas',yr,'go','#/stats')}${pill('cal','Cronología',tlN,'go','#/timeline')}</div>`;
+  const pills=`<div class="hpills">${pill('book','Biblioteca',S.books.length,'go','#/')}${pill('mark','Deseos',S.wish.length,'go','#/wish')}${pill('quote','Citas',S.quotes.length,'go','#/citas')}${pill('clock','Por leer',pend.length,'go-pending')}${pill('chart','Estadísticas',yr,'go','#/stats')}${pill('cal','Cronología',tlN,'go','#/timeline')}${pill('layers','Colecciones',seriesList().length,'go','#/series')}</div>`;
   const g=goalN(),nb=Math.min(g,36),filled=g?Math.round(Math.min(doneYear,g)/g*nb):0;
   const goal=`<button class="goalbtn" data-act="goal"${g?` aria-label="Meta de ${yr}: ${doneYear} de ${g} libros. Toca para cambiarla"`:''}>${g?`<span class="small muted" style="font-weight:600;display:block">Tu meta de ${yr}</span><span class="gnum"><b>${doneYear}</b><span>de ${g}<br>libros</span></span><span class="gbars" aria-hidden="true">${Array.from({length:nb},(_,i)=>`<i class="${i<filled?'on':''}" style="height:${22+((i*7)%5)*3}px"></i>`).join('')}</span>${doneYear>=g?'<span class="small" style="display:block;margin-top:8px;font-weight:700">¡Meta cumplida!</span>':''}`:`<span class="gh">Meta de lectura</span><span class="muted small" style="display:block">Fija cuántos libros quieres leer este año. Toca para elegirla.</span>`}</button>`;
   let qod='';
@@ -418,6 +426,37 @@ function renderHome(){
     qod=`<div style="margin-top:28px"><button class="qfeat" data-act="go" data-h="#/citas"><span class="top"><span>Cita del día</span></span><p>“${esc(q.text)}”</p><span class="small">${esc(b?b.title:'')}${q.page?' · pág. '+esc(q.page):''}</span></button></div>`}
   $('#main').innerHTML=warn+hero+(S.books.length?'':'<p class="muted" style="margin:16px 0;text-align:center">Pulsa <b>+</b> para añadir tu primer libro. Solo necesitas el título.</p>')+pills+goal+qod;
   if(pool.length)initCarousel(pool)}
+
+/* ---------- Colecciones (trilogías, sagas, series) ---------- */
+function seriesList(){const m=new Map();
+  const add=(it,kind)=>{const n=(it.series||'').trim();if(!n)return;const k=norm(n);let e=m.get(k);if(!e){e={key:k,name:n,at:it.addedAt||'',books:[],wish:[]};m.set(k,e)}else if((it.addedAt||'')<e.at){e.name=n;e.at=it.addedAt||''} // el nombre mostrado es el del primero que lo escribió
+    e[kind].push(it)};
+  S.books.forEach(b=>add(b,'books'));S.wish.forEach(w=>add(w,'wish'));
+  const nn=x=>x.seriesNo||9999,cmp=(a,b)=>nn(a)-nn(b)||norm(a.title).localeCompare(norm(b.title),'es');
+  m.forEach(e=>{e.books.sort(cmp);e.wish.sort(cmp)});
+  return [...m.values()].sort((a,b)=>norm(a.name).localeCompare(norm(b.name),'es'))}
+const seriesOf=it=>{const n=(it.series||'').trim();return n?n+(it.seriesNo?' · nº '+it.seriesNo:''):''};
+function seriesLink(it){const n=(it.series||'').trim();return n?`<div style="margin-top:8px"><button class="btn small" data-act="open-series" data-k="${esc(norm(n))}">${ico('book')} ${esc(seriesOf(it))}</button></div>`:''}
+function renderSeries(){
+  const L=seriesList();
+  $('#top').innerHTML=`<div class="row"><button class="btn ghost" data-act="go" data-h="#/inicio">← Inicio</button><span class="grow"></span>${BTN_BACKUP}</div><h1 style="margin-top:4px">Colecciones</h1><div class="muted small">Trilogías, sagas y series con su orden y lo que te falta.</div>`;
+  if(!L.length){$('#main').innerHTML=`<div class="empty"><div class="big">📚</div><h2>Aún no tienes colecciones</h2><p>Al añadir o editar un libro, escribe el nombre de la colección y su número. Aparecerán aquí agrupados.</p></div>`;return}
+  $('#main').innerHTML=L.map(e=>{const rd=e.books.filter(b=>b.status==='leido').length,n=e.books.length,pc=n?Math.round(rd/n*100):0,cv=[...e.books,...e.wish].slice(0,3);
+    return `<button class="panel scard" data-act="open-series" data-k="${esc(e.key)}"><span class="sfan">${cv.map(c=>`<span class="sc">${coverHTML(c)}</span>`).join('')}</span><span class="sinfo"><b>${esc(e.name)}</b><span class="small muted" style="display:block">${n?`${rd} de ${n} leídos`:'Solo en tu lista de deseos'}${e.wish.length?` · ${e.wish.length} en deseos`:''}</span><span class="brow" style="margin-top:8px"><span class="hb"><i style="width:${pc}%"></i></span></span></span></button>`}).join('')}
+function renderSerie(k){
+  const e=seriesList().find(x=>x.key===k);if(!e){location.hash='#/series';return}
+  const rd=e.books.filter(b=>b.status==='leido').length,n=e.books.length;
+  $('#top').innerHTML=`<div class="row"><button class="btn ghost" data-act="go" data-h="#/series">← Colecciones</button><span class="grow"></span>${BTN_BACKUP}</div><h1 style="margin-top:4px">${esc(e.name)}</h1><div class="muted small">${n?`${rd} de ${n} leídos`:'Aún no tienes ninguno en tu biblioteca'}${e.wish.length?` · ${e.wish.length} en deseos`:''}</div>`;
+  const all=[...e.books.map(it=>({it,t:'b'})),...e.wish.map(it=>({it,t:'w'}))],nums=all.map(x=>x.it.seriesNo).filter(Boolean),max=nums.length?Math.max(...nums):0;
+  const rows=[];for(let i=1;i<=Math.min(max,60);i++){const hit=all.filter(x=>x.it.seriesNo===i);if(hit.length)rows.push(...hit);else rows.push({miss:i})}
+  rows.push(...all.filter(x=>!x.it.seriesNo));
+  const missing=rows.filter(r=>r.miss).map(r=>r.miss);
+  const next=max+1;
+  $('#main').innerHTML=(n?`<div class="brow" style="margin:0 0 6px"><span class="hb"><i style="width:${Math.round(rd/n*100)}%"></i></span></div>`:'')+(missing.length?`<div class="banner"><b>Te ${missing.length===1?'falta':'faltan'} ${missing.length===1?'el nº':'los nº'} ${missing.join(', ')}</b></div>`:'')
+   +rows.map(r=>{if(r.miss)return `<div class="srow miss"><span class="sn">${r.miss}</span><span class="muted">Falta en tu biblioteca</span></div>`;
+     const {it,t}=r,st=t==='w'?'En deseos':it.status==='leido'?'✓ Leído':'Por leer';
+     return `<div class="srow"><span class="sn">${it.seriesNo||'–'}</span><button class="card wmain" data-act="${t==='w'?'open-wish':'open-book'}" data-id="${it.id}"><span class="wcv" style="flex-basis:48px;width:48px">${coverHTML(it)}</span><span class="wi"><span class="t">${esc(it.title)}</span><span class="a">${esc(authStr(it))}</span><span class="small" style="font-weight:700">${st}${t==='b'&&it.rating?' · '+'★'.repeat(it.rating):''}</span></span></button>${t==='w'?`<button class="btn small" data-act="move-wish" data-id="${it.id}">Pasar a mi biblioteca</button>`:''}</div>`}).join('')
+   +`<button class="btn primary" style="width:100%;margin-top:14px" data-act="new-book-series" data-name="${esc(e.name)}" data-next="${next}">+ Añadir otro libro a esta colección</button>`}
 
 /* ---------- Ruleta de portadas (Inicio) ---------- */
 const CF_STEP=110;
@@ -518,7 +557,7 @@ function renderBook(id){
   $('#top').innerHTML=`<div class="row"><button class="btn ghost" data-act="back">← Biblioteca</button><span class="grow"></span><button class="btn small" data-act="edit-book" data-id="${id}">Editar</button><button class="btn small danger" data-act="del-book" data-id="${id}">Eliminar</button></div>`;
   $('#main').innerHTML=`<div class="detail">
    <div class="hero">${coverHTML(b)}<div><h2 class="serif">${esc(b.title)}</h2>${b.subtitle?`<div class="muted">${esc(b.subtitle)}</div>`:''}<div style="margin-top:4px">${esc(authStr(b))||'<span class="muted">Autor desconocido</span>'}</div>
-     <div style="margin-top:8px"><button class="btn small" data-act="toggle-status" data-id="${id}">${b.status==='leido'?'✓ Leído':'⏳ Pendiente de leer'}</button></div>${b.status==='leido'&&(b.formats||[]).length?`<div class="small" style="margin-top:8px">${(b.formats||[]).map(f=>f==='fisico'?'📕 Físico':'📱 Electrónico').join(' &nbsp;·&nbsp; ')}</div>`:''}${b.status==='leido'&&(b.startDate||b.endDate)?`<div class="small" style="margin-top:6px">${b.startDate?`📅 Inicio: ${fmtDay(b.startDate)}`:''}${b.startDate&&b.endDate?'<br>':''}${b.endDate?`🏁 Fin: ${fmtDay(b.endDate)}`:''}</div>`:''}<div style="margin-top:8px">${cdlButton(b)}</div></div></div>
+     <div style="margin-top:8px"><button class="btn small" data-act="toggle-status" data-id="${id}">${b.status==='leido'?'✓ Leído':'⏳ Pendiente de leer'}</button></div>${b.status==='leido'&&(b.formats||[]).length?`<div class="small" style="margin-top:8px">${(b.formats||[]).map(f=>f==='fisico'?'📕 Físico':'📱 Electrónico').join(' &nbsp;·&nbsp; ')}</div>`:''}${b.status==='leido'&&(b.startDate||b.endDate)?`<div class="small" style="margin-top:6px">${b.startDate?`📅 Inicio: ${fmtDay(b.startDate)}`:''}${b.startDate&&b.endDate?'<br>':''}${b.endDate?`🏁 Fin: ${fmtDay(b.endDate)}`:''}</div>`:''}${seriesLink(b)}<div style="margin-top:8px">${cdlButton(b)}</div></div></div>
    <section><h3>Mi valoración</h3>${stars(b.rating||0,'rate')}<div class="muted small">${b.rating?`${b.rating} de 5 · <button class="btn ghost small" data-act="rate" data-v="0" style="min-height:0;padding:0">quitar valoración</button>`:'Sin valorar'}</div></section>
    <section><h3>Sinopsis y datos ${srcPill(b)}</h3>${b.synopsis?`<p style="white-space:pre-wrap">${esc(b.synopsis)}</p>`:'<p class="muted">Sin sinopsis.</p>'}${dlRows(b)}</section>
    <section><h3>Personajes principales</h3>${(b.characters||[]).length?b.characters.map(c=>`<div class="chr"><b>${esc(c.name)}</b>${c.desc?`<div class="small">${esc(c.desc)}</div>`:'<div class="small muted">Sin descripción</div>'}</div>`).join(''):'<p class="muted">Aún no hay personajes.</p>'}</section>
@@ -534,7 +573,7 @@ function renderWishItem(id){
   const w=S.wish.find(x=>x.id===id);if(!w){location.hash='#/wish';return}
   $('#top').innerHTML=`<div class="row"><button class="btn ghost" data-act="back-wish">← Lista de deseos</button><span class="grow"></span><button class="btn small" data-act="edit-wish" data-id="${id}">Editar</button><button class="btn small danger" data-act="del-wish" data-id="${id}">Eliminar</button></div>`;
   $('#main').innerHTML=`<div class="detail"><div class="hero">${coverHTML(w)}<div><h2 class="serif">${esc(w.title)}</h2>${w.subtitle?`<div class="muted">${esc(w.subtitle)}</div>`:''}<div style="margin-top:4px">${esc(authStr(w))||'<span class="muted">Autor desconocido</span>'}</div>
-     <div style="margin-top:8px" class="small muted">Prioridad: ${w.priority?esc(w.priority):'sin asignar'}</div></div></div>
+     <div style="margin-top:8px" class="small muted">Prioridad: ${w.priority?esc(w.priority):'sin asignar'}</div>${seriesLink(w)}</div></div>
    <div style="margin-top:18px;display:flex;flex-direction:column;gap:8px"><button class="btn primary" style="width:100%" data-act="move-wish" data-id="${id}">Pasar a mi biblioteca</button>${cdlButton(w).replace('btn small','btn')}</div>
    ${w.personalNote?`<section><h3>Nota personal</h3><p style="white-space:pre-wrap">${esc(w.personalNote)}</p></section>`:''}
    <section><h3>Sinopsis y datos ${srcPill(w)}</h3>${w.synopsis?`<p style="white-space:pre-wrap">${esc(w.synopsis)}</p>`:''}${dlRows(w)}</section>
@@ -542,11 +581,11 @@ function renderWishItem(id){
 
 /* ======================= Formulario de alta / edición ======================= */
 let F=null; // estado del formulario
-const FIELDS=['title','subtitle','authors','genres','pubDate','publisher','isbn','language','synopsis','startDate','endDate'];
-function blank(kind){return {kind,id:uid(),isNew:true,formats:[],startDate:'',endDate:'',title:'',subtitle:'',authors:'',genres:'',pubDate:'',publisher:'',isbn:'',language:'',synopsis:'',
+const FIELDS=['title','subtitle','authors','genres','pubDate','publisher','isbn','language','synopsis','startDate','endDate','series','seriesNo'];
+function blank(kind){return {kind,id:uid(),isNew:true,formats:[],startDate:'',endDate:'',series:'',seriesNo:'',title:'',subtitle:'',authors:'',genres:'',pubDate:'',publisher:'',isbn:'',language:'',synopsis:'',
   characters:[],quotes:[],notes:'',rating:0,status:'pendiente',priority:'',personalNote:'',coverBlob:null,coverUrl:'',
   edited:new Set(),auto:null,autoApplied:false,results:null,searching:false,errs:[],metadataSource:'',metadataVerified:false}}
-function fromItem(kind,it){const f=blank(kind);Object.assign(f,{id:it.id,isNew:false,orig:it,formats:[...(it.formats||[])],startDate:it.startDate||'',endDate:it.endDate||'',title:it.title||'',subtitle:it.subtitle||'',authors:authStr(it),genres:(it.genres||[]).join(', '),pubDate:it.pubDate||'',publisher:it.publisher||'',isbn:it.isbn||'',language:it.language||'',synopsis:it.synopsis||'',
+function fromItem(kind,it){const f=blank(kind);Object.assign(f,{id:it.id,isNew:false,orig:it,formats:[...(it.formats||[])],startDate:it.startDate||'',endDate:it.endDate||'',series:it.series||'',seriesNo:it.seriesNo?String(it.seriesNo):'',title:it.title||'',subtitle:it.subtitle||'',authors:authStr(it),genres:(it.genres||[]).join(', '),pubDate:it.pubDate||'',publisher:it.publisher||'',isbn:it.isbn||'',language:it.language||'',synopsis:it.synopsis||'',
   characters:(it.characters||[]).map(c=>({...c})),notes:it.notes||'',rating:it.rating||0,status:it.status||'pendiente',priority:it.priority||'',personalNote:it.personalNote||'',coverBlob:it.coverBlob||null,coverUrl:it.coverUrl||'',metadataSource:it.metadataSource||'',metadataVerified:!!it.metadataVerified});
   FIELDS.forEach(k=>f.edited.add(k));return f} // datos ya guardados: una búsqueda nueva no los pisa
 async function openForm(kind,item){
@@ -596,7 +635,9 @@ function renderForm(){
    <div class="row" style="align-items:flex-start"><div style="width:96px;flex:0 0 96px">${hasCover?coverHTML(cov):'<div class="cover"><div class="ph" style="background:#e9e0cf"><span>Sin portada</span></div></div>'}</div>
     <div class="grow" style="display:flex;flex-direction:column;gap:8px"><button class="btn small" data-act="pick-img">🖼 Subir desde la galería</button><button class="btn small" data-act="pick-cam">📷 Hacer una foto</button>${hasCover?'<button class="btn small danger" data-act="rm-cover">Quitar portada</button>':''}</div></div>
    <h3 style="margin:24px 0 0">Datos del libro</h3>
-   ${fld('subtitle','Subtítulo')}${fld('genres','Géneros (separados por comas)')}
+   ${fld('subtitle','Subtítulo')}
+   <div class="two" style="grid-template-columns:1fr 96px"><div><label for="f-series">Colección o saga (opcional)</label><input id="f-series" list="series-list" value="${esc(F.series)}" placeholder="Ej.: Trilogía de la Fundación" autocomplete="off"><datalist id="series-list">${seriesList().map(e=>`<option value="${esc(e.name)}">`).join('')}</datalist></div><div><label for="f-seriesNo">Nº</label><input id="f-seriesNo" type="number" min="1" max="999" inputmode="numeric" value="${esc(F.seriesNo)}" placeholder="1"></div></div>
+   ${fld('genres','Géneros (separados por comas)')}
    <div class="two"><div>${fld('pubDate','Fecha de publicación')}</div><div>${fld('publisher','Editorial')}</div></div>
    <div class="two"><div>${fld('isbn','ISBN')}</div><div>${fld('language','Idioma')}</div></div>
    ${fld('synopsis','Sinopsis',"Sinopsis o resumen",{area:1})}
@@ -640,6 +681,7 @@ function buildRecord(){
   const now=new Date().toISOString();const base=F.orig||{};
   const r={...base,id:F.id,title:F.title.trim(),subtitle:F.subtitle.trim(),authors:splitList(F.authors),genres:splitList(F.genres),pubDate:F.pubDate.trim(),publisher:F.publisher.trim(),isbn:F.isbn.trim(),language:F.language.trim(),synopsis:F.synopsis.trim(),
     coverBlob:F.coverBlob||null,coverUrl:F.coverBlob?'':(F.coverUrl||''),metadataSource:F.metadataSource||'',metadataVerified:!!(F.auto&&F.auto.confirmed)||(!F.auto&&F.metadataVerified),addedAt:base.addedAt||now,updatedAt:now};
+  r.series=(F.series||'').trim();r.seriesNo=r.series&&parseInt(F.seriesNo,10)>0?Math.min(999,parseInt(F.seriesNo,10)):null;
   if(F.kind==='book'){r.startDate=F.startDate||'';r.endDate=F.endDate||'';r.formats=(F.formats||[]).filter(x=>x==='fisico'||x==='electronico');r.characters=F.characters.filter(c=>c.name);r.rating=F.rating||null;r.status=F.status;r.notes=F.notes}
   else{r.priority=F.priority||'';r.personalNote=F.personalNote.trim()}
   return r}
@@ -698,7 +740,7 @@ async function moveWish(id){
 
 /* ======================= Exportación ======================= */
 function csvEscape(v,d){v=String(v??'');return (/["\r\n]/.test(v)||v.includes(d))?'"'+v.replace(/"/g,'""')+'"':v}
-const CSVCOLS=[['Título',w=>w.title],['Subtítulo',w=>w.subtitle],['Autor',w=>authStr(w)],['Género',w=>(w.genres||[]).join('; ')],['ISBN',w=>w.isbn],['Editorial',w=>w.publisher],['Fecha de publicación',w=>w.pubDate],['Idioma',w=>w.language],['Sinopsis',w=>w.synopsis],['Fecha de incorporación',w=>w.addedAt],['Prioridad',w=>w.priority],['Notas',w=>w.personalNote],['Fuente de los datos',w=>w.metadataSource]];
+const CSVCOLS=[['Título',w=>w.title],['Subtítulo',w=>w.subtitle],['Autor',w=>authStr(w)],['Género',w=>(w.genres||[]).join('; ')],['ISBN',w=>w.isbn],['Editorial',w=>w.publisher],['Fecha de publicación',w=>w.pubDate],['Idioma',w=>w.language],['Sinopsis',w=>w.synopsis],['Fecha de incorporación',w=>w.addedAt],['Prioridad',w=>w.priority],['Notas',w=>w.personalNote],['Fuente de los datos',w=>w.metadataSource],['Colección',w=>w.series],['Nº en la colección',w=>w.seriesNo]];
 function toCSV(items,d){const rows=[CSVCOLS.map(c=>c[0]),...items.map(w=>CSVCOLS.map(c=>c[1](w)))];return '\uFEFF'+rows.map(r=>r.map(v=>csvEscape(v,d)).join(d)).join('\r\n')}
 function parseCSV(t,d){t=t.replace(/^\uFEFF/,'');const rows=[];let row=[],f='',q=false;
   for(let i=0;i<t.length;i++){const c=t[i];
@@ -722,7 +764,7 @@ function makePDF(items,dateStr){
   put('Lista de deseos',20,true,2);put(`Exportada el ${dateStr} · ${items.length} libro${items.length===1?'':'s'}`,10,false,14);
   items.forEach(w=>{if(y<130){pages.push([]);y=790}
     put(w.title||'(sin título)',12,true);if(authStr(w))put(authStr(w),11,false);
-    const meta=[(w.genres||[]).join(', '),w.priority&&'Prioridad '+w.priority,w.isbn&&'ISBN '+w.isbn,'Añadido '+(w.addedAt||'').slice(0,10)].filter(Boolean).join(' · ');put(meta,9,false);
+    const meta=[(w.genres||[]).join(', '),w.priority&&'Prioridad '+w.priority,w.series&&('Colección '+w.series+(w.seriesNo?' nº '+w.seriesNo:'')),w.isbn&&'ISBN '+w.isbn,'Añadido '+(w.addedAt||'').slice(0,10)].filter(Boolean).join(' · ');put(meta,9,false);
     if(w.personalNote)put('Nota: '+w.personalNote,9,false);y-=10});
   const objs=[];objs[1]='<< /Type /Catalog /Pages 2 0 R >>';
   const kids=pages.map((_,i)=>`${5+i*2} 0 R`).join(' ');objs[2]=`<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`;
@@ -808,12 +850,13 @@ async function filtersDialog(){
   const authors=[...new Set(S.books.flatMap(b=>b.authors||[]))].sort((a,b)=>a.localeCompare(b,'es')),genres=[...new Set(S.books.flatMap(b=>b.genres||[]))].sort((a,b)=>a.localeCompare(b,'es')),f=S.f;
   const opt=(a,v)=>a.map(x=>`<option ${x===v?'selected':''}>${esc(x)}</option>`).join('');
   const r=await dialog('Filtros',`<label>Autor</label><select id="fa"><option value="">Todos</option>${opt(authors,f.author)}</select><label>Género</label><select id="fg"><option value="">Todos</option>${opt(genres,f.genre)}</select>
+   ${seriesList().length?`<label>Colección</label><select id="fse"><option value="">Todas</option>${seriesList().filter(e=>e.books.length).map(e=>`<option ${e.name===f.series?'selected':''}>${esc(e.name)}</option>`).join('')}</select>`:'<input id="fse" type="hidden" value="">'}
    <label>Estado</label><select id="fs"><option value="">Todos</option><option value="leido" ${f.status==='leido'?'selected':''}>Leídos</option><option value="pendiente" ${f.status==='pendiente'?'selected':''}>Pendientes</option></select>
    <label>Estrellas</label><select id="fr"><option value="">Todas</option><option value="none" ${f.rating==='none'?'selected':''}>Sin valorar</option>${[5,4,3,2,1].map(n=>`<option value="${n}" ${f.rating==n?'selected':''}>${'★'.repeat(n)}</option>`).join('')}</select>
    <div class="two"><div><label>Empezado desde</label><input type="date" id="fsd1" value="${f.sFrom||''}"></div><div><label>hasta</label><input type="date" id="fsd2" value="${f.sTo||''}"></div></div>
    <div class="two"><div><label>Terminado desde</label><input type="date" id="fed1" value="${f.eFrom||''}"></div><div><label>hasta</label><input type="date" id="fed2" value="${f.eTo||''}"></div></div>
    <div class="two"><div><label>Incorporado desde</label><input type="date" id="fd1" value="${f.from}"></div><div><label>hasta</label><input type="date" id="fd2" value="${f.to}"></div></div>`,
-   [{label:'Aplicar',cls:'primary',get:m=>({author:$('#fa',m).value,genre:$('#fg',m).value,status:$('#fs',m).value,rating:$('#fr',m).value,from:$('#fd1',m).value,to:$('#fd2',m).value,sFrom:$('#fsd1',m).value,sTo:$('#fsd2',m).value,eFrom:$('#fed1',m).value,eTo:$('#fed2',m).value})},{label:'Quitar filtros',val:{author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:''}},{label:'Cancelar',val:null}]);
+   [{label:'Aplicar',cls:'primary',get:m=>({author:$('#fa',m).value,genre:$('#fg',m).value,status:$('#fs',m).value,rating:$('#fr',m).value,from:$('#fd1',m).value,to:$('#fd2',m).value,sFrom:$('#fsd1',m).value,sTo:$('#fsd2',m).value,eFrom:$('#fed1',m).value,eTo:$('#fed2',m).value,series:$('#fse',m).value})},{label:'Quitar filtros',val:{author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:'',series:''}},{label:'Cancelar',val:null}]);
   if(r){S.f=r;renderLib()}}
 async function wfiltersDialog(){
   const genres=[...new Set(S.wish.flatMap(b=>b.genres||[]))].sort((a,b)=>a.localeCompare(b,'es')),f=S.wf;
@@ -828,6 +871,8 @@ let imgTarget=null;
 const ACT={
   tab:t=>{location.hash={home:'#/inicio',lib:'#/',wish:'#/wish',quotes:'#/citas',stats:'#/stats'}[t.dataset.v]||'#/'},
   go:t=>{location.hash=t.dataset.h},
+  'open-series':t=>{location.hash='#/serie/'+encodeURIComponent(t.dataset.k)},
+  'new-book-series':async t=>{await openForm('book');if(F&&F.isNew&&!F.title&&!F.series){F.series=t.dataset.name;F.seriesNo=t.dataset.next;renderForm()}},
   'cf-pick':t=>{const cf=$('#cf'),i=+t.dataset.i;if(!cf)return;if(String(i)===cf.dataset.cur){location.hash='#/book/'+t.dataset.id;return}
     if(cf.scrollTo)cf.scrollTo({left:i*CF_STEP,behavior:'smooth'});else{cf.scrollLeft=i*CF_STEP;cf.dispatchEvent(new Event('scroll'))}},
   'go-pending':()=>{S.f.status='pendiente';location.hash='#/'},
@@ -847,7 +892,7 @@ const ACT={
   'new-book':()=>openForm('book'),'new-wish':()=>openForm('wish'),
   'open-book':t=>{location.hash='#/book/'+t.dataset.id},'open-wish':t=>{location.hash='#/wish/'+t.dataset.id},
   filters:filtersDialog,wfilters:wfiltersDialog,
-  'clear-f':()=>{S.f={author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:''};S.q='';renderLib()},'clear-wf':()=>{S.wf={genre:'',prio:'',from:'',to:''};S.wq='';renderWish()},
+  'clear-f':()=>{S.f={author:'',genre:'',status:'',rating:'',from:'',to:'',sFrom:'',sTo:'',eFrom:'',eTo:'',series:''};S.q='';renderLib()},'clear-wf':()=>{S.wf={genre:'',prio:'',from:'',to:''};S.wq='';renderWish()},
   'edit-book':t=>openForm('book',S.books.find(b=>b.id===t.dataset.id)),'edit-wish':t=>openForm('wish',S.wish.find(b=>b.id===t.dataset.id)),
   'del-book':async t=>{const b=S.books.find(x=>x.id===t.dataset.id),n=S.quotes.filter(q=>q.bookId===b.id).length;
     if(!await confirmDel('¿Eliminar este libro?',`Se eliminará «${esc(b.title)}» junto con sus ${n} cita${n===1?'':'s'} y tus observaciones. No se puede deshacer.`))return;
@@ -908,7 +953,7 @@ const ACT={
   backup:async()=>{const a=backupAge();const r=await dialog('Copia de seguridad',`<p class="muted small" style="margin:0 0 8px">Guarda <b>toda</b> tu biblioteca (libros, portadas, citas, observaciones y lista de deseos) en un archivo. Sirve para <b>cambiar de móvil</b> o recuperar tus datos. Se crea en tu dispositivo; no se envía a ningún servidor.</p><p class="small" style="margin:0 0 8px">${a===null?'Aún no has hecho ninguna copia.':`Última copia: hace ${a} día${a===1?'':'s'}.`}</p><p class="muted small" style="margin:0"><b>Para cambiar de móvil:</b> pulsa «Crear copia» y compártela por WhatsApp o correo (a ti mismo) o guárdala en Drive. En el móvil nuevo, abre la app, descarga el archivo y pulsa «Restaurar desde una copia».</p><p class="muted small" style="margin:10px 0 0">Versión de la app: ${APP_VERSION}</p>`,
     [{label:'⬇ Crear copia de seguridad',cls:'primary',val:'export'},{label:'⬆ Restaurar desde una copia',val:'import'},{label:'🔄 Actualizar la app (no borra tus libros)',val:'update'},{label:'🔊 Sonidos: '+(soundOn()?'activados':'desactivados')+' (tocar para cambiar)',val:'sound'},{label:'Cerrar',val:null}]);
     if(r==='sound'){setPref('sound',soundOn()?'off':'on');toast('Sonidos '+(soundOn()?'activados':'desactivados'),1800);sndClick()}else if(r==='export')exportBackup();else if(r==='update'){toast('Actualizando…',1500);forceUpdate()}else if(r==='import'){toast('Elige el archivo copia_biblioteca_….json',3000);$('#file-json').click()}}};
-function formChanged(){const o=F.orig;if(!o)return true;const r=buildRecord();const k=['startDate','endDate','title','subtitle','synopsis','pubDate','publisher','isbn','language','notes','status','rating','priority','personalNote','coverUrl'];
+function formChanged(){const o=F.orig;if(!o)return true;const r=buildRecord();const k=['series','seriesNo','startDate','endDate','title','subtitle','synopsis','pubDate','publisher','isbn','language','notes','status','rating','priority','personalNote','coverUrl'];
   return k.some(x=>(r[x]||'')!==(o[x]||''))||authStr(r)!==authStr(o)||(r.genres||[]).join()!==(o.genres||[]).join()||r.coverBlob!==(o.coverBlob||null)||JSON.stringify(r.characters||[])!==JSON.stringify(o.characters||[])||JSON.stringify(r.formats||[])!==JSON.stringify(o.formats||[])}
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t)return;const f=ACT[t.dataset.act];if(f){sndClick();Promise.resolve(f(t,e)).catch(err=>toast('Error: '+(err&&err.message||err),5000))}});
 document.addEventListener('input',e=>{const t=e.target;
